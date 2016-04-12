@@ -51,7 +51,9 @@ int main(int argc, char *argv[]){
     message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(data_type *));
     message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(data_type *));
 
-  
+
+
+
     if(load){
       //Fill Shared Memory with "data"  
       int i = 0; 
@@ -62,11 +64,21 @@ int main(int argc, char *argv[]){
     }
 
     if(check){
+        int i = offset;
+        while (1) {
+            while(!toCheckQ->try_send(&i, sizeof(data_type *), priority) ){
+                usleep(1000);
+                //TODO exits after many attems
+            }
+            std::cout << "Pushing "<<std::endl;
+            i++;
+            usleep(1000);
+        }
       //Try to enqueue "data" to be checked
-      for(int i = 0; i < DATA_HOLD_SIZE/sizeof(data_type); i++){
-	if(i >= offset && !toCheckQ->try_send(&i, sizeof(data_type *), priority) ) 
-	  break; //queue is full
-      }
+      //for(int i = 0; i < DATA_HOLD_SIZE/sizeof(data_type); i++){
+      //  if(i >= offset && !toCheckQ->try_send(&i, sizeof(data_type *), priority) ) 
+      //    break; //queue is full
+      //}
     }
   
     

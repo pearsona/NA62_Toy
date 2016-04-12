@@ -17,16 +17,18 @@ int main(int argc, char *argv[]){
 
     //Try to dequeue "data" to be checked, check it, and try to enqueue it
     int *offset = (int *)malloc(sizeof(int *));
-    for(int i = 0; i < TO_Q_SIZE; i++){
-      if( !toCheckQ->try_receive((void *)offset, sizeof(data_type *), recvd_size, priority) || recvd_size != sizeof(data_type *) )
-	break; //the queue is empty or the data is corrupted
+    while (1) {
+      while( !toCheckQ->try_receive((void *)offset, sizeof(data_type *), recvd_size, priority) || recvd_size != sizeof(data_type *) ) {
+          usleep(1);
+      }
+        //break; //the queue is empty or the data is corrupted
 
       temp = (data_type *)(region.get_address() + (*offset)*sizeof(data_type));
       *temp = (data_type)(rand() % 2);
-
+      std::cout << "processing: "<< *temp <<std::endl;
 
       /*      if( !fromCheckQ->try_send(temp, sizeof(data_type), priority) )
-	      break; //queue is full*/
+                  break; //queue is full*/
     }
 
   } catch(interprocess_exception e){
