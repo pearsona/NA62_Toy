@@ -1,19 +1,46 @@
 #include "shared.hpp"
 
-int main(int argc, char *argv[]){
+int main(int argc, char* argv[]){
+
+  bool continuous = false;
+  int wait_time = 0; //number of centiseconds between refresh
+
+  int c;
+  opterr = 0;
+  const char* options = "c::";
+  while( (c = getopt(argc, argv, options)) != -1) {
+    switch(c){
+    case 'c':
+      continuous = true;
+      if(optarg != NULL) wait_time = atoi(optarg);
+      break;
+    }
+
+  }
 
 
   try{
-    shared_memory_object shm(open_only, "shm", read_only);
-    mapped_region region(shm, read_only);
+    managed_shared_memory segment(open_only, "segment");
 
-    int i = 0;
-    for(data_type* p = (data_type *)region.get_address(); p < (data_type *)(region.get_address() + DATA_HOLD_SIZE); p++) std::cout<<i++<<": "<<(data_type)(*p)<<"\n";
+    do{
+      for(int i = 0; i < DATA_HOLD_SIZE; i++){
+	std::sprintf(name, "i_%04d", i);
+	d = segment.find<data_type>(name);
+	std::cout<<name<<": "<<*d.first<<"\n";
+	
+      }
+      for(int i = 0; i < wait_time; i++) usleep(100000); //1 centisecond
+    }while(continuous);
 
-  } catch(interprocess_exception& e){
-    std::cout<<e.what()<<"\n";
-  }
   
 
-  return 0;
+
+  }catch(interprocess_exception& e){
+
+    std::cout<<e.what()<<"\n";
+    exit(1);
+  }
+
+
+  return 1;
 }
