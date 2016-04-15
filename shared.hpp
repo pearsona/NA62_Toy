@@ -3,6 +3,7 @@
 #include <string>
 #include <unistd.h>
 #include <time.h>
+#include <typeinfo>
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>

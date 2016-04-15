@@ -1,10 +1,13 @@
 #include "shared.hpp"
 
+//Prototypes
+void process(data_type *d);
+
+
+//Main
 int main(int argc, char *argv[]){
 
   try{
-    srand(time(NULL)); 
-
     managed_shared_memory segment(open_only, "segment");
     
   
@@ -18,19 +21,8 @@ int main(int argc, char *argv[]){
       while( !toCheckQ->try_receive((void *)name, sizeof("i_1024"), recvd_size, priority) || recvd_size != sizeof("i_1024") ) {
           usleep(1);
       }
-      
       d = segment.find<data_type>(name);
-      //std::cout << "processing: "<< *d.first <<std::endl;
-      *d.first = rand() % 2;
-      //std::cout << "processed: "<< *d.first <<std::endl;
-
-      /*
-      temp = (data_type *)(region.get_address() + (*offset)*sizeof(data_type));
-      *temp = (data_type)(rand() % 2);*/
- 
-
-      /*      if( !fromCheckQ->try_send(temp, sizeof(data_type), priority) )
-                  break; //queue is full*/
+      process(d.first);
     }
 
   } catch(interprocess_exception e){
@@ -38,4 +30,11 @@ int main(int argc, char *argv[]){
   }
   
   return 0;
+}
+
+
+void process(data_type *d){
+  srand(time(NULL)); 
+  *d = rand() % 2;
+  usleep(100);
 }

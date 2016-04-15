@@ -1,5 +1,10 @@
 #include "shared.hpp"
 
+//Prototypes
+char* label(data_type d);
+
+
+//Main
 int main(int argc, char *argv[]){
 
   srand(time(NULL));
@@ -58,63 +63,28 @@ int main(int argc, char *argv[]){
       //alloc_inst.allocate(DATA_HOLD_SIZE*sizeof(int));
       for(int i = 0; i < DATA_HOLD_SIZE; i++){
 	//alloc_inst.allocate(sizeof(i));
-	
-	std::sprintf(name, "i_%04d", i);
 	//std::cout<<name<<"\n";
-	segment.construct<data_type>(name)(i);
+
+	segment.construct<data_type>(label(i))(i);
       }
 
       std::cout<<"Loaded\n";
-      /*
-      std::pair<int*, std::size_t> d = segment.find<data_type>("Integers");
-      start = d.first;
-      
-
-      for(p = start; p < start + DATA_HOLD_SIZE; p++){
-	std::cout<< *p <<"\n";
-      }
-      */
-
-      //DATA_HOLD_SIZE *= sizeof(data_type);
 
     }
 
     if(check){
       int i = offset;
       while (1) {
-	std::sprintf(name, "i_%04d", i);
-	while(!toCheckQ->try_send(name, sizeof("i_1024"), priority) ){
+	while(!toCheckQ->try_send(label(i++), sizeof("i_1024"), priority) ){
 	  usleep(1000);
-	  //TODO exits after many attemps
 	}
-	//std::cout << "Pushing "<<i<<std::endl;
-	(i  >= DATA_HOLD_SIZE/sizeof(data_type)) ? i = 0 : ++i;
 	usleep(1000);
+
+	//Loop back to beginning of shared memory
+	if( i >= DATA_HOLD_SIZE ) i = 0;
       }
-      //Try to enqueue "data" to be checked
-      //for(int i = 0; i < DATA_HOLD_SIZE/sizeof(data_type); i++){
-      //  if(i >= offset && !toCheckQ->try_send(&i, sizeof(data_type *), priority) ) 
-      //    break; //queue is full
-      //}
     }
   
-    
-    if(pull){
-      //Try to dequeue "data" from being checked
-      for(int i = 0; i < DATA_HOLD_SIZE/sizeof(data_type); i++){
-	if( !fromCheckQ->try_receive((void *)temp, sizeof(data_type), recvd_size, priority) || recvd_size != sizeof(data_type) )
-	  break; //the queue is empty or the data is corrupted
-
-	std::cout<<*temp<<"\n";
-      
-	/*
-	  data_type *p = (data_type *)malloc(sizeof(data_type *)); *p = *temp;
-	  if( !dataQ->try_send((void *)p, sizeof(data_type), priority) )
-	  break; //queue is full
-	*/
-      }
-    }
-
   } catch(interprocess_exception& e) {
     std::cout<<e.what()<<std::endl;
   }
@@ -122,4 +92,12 @@ int main(int argc, char *argv[]){
 
 
   return 0;
+}
+
+
+char* label(data_type d){
+  if( 0 == strcmp(typeid(d).name(), typeid(int).name()) ) std::sprintf(name, "i_%04d", d);
+  else return "unknown type";
+
+  return name;
 }
