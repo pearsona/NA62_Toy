@@ -1,6 +1,7 @@
 #include "shared.hpp"
 
 //Prototypes
+data_type newData(uint d);
 char* label(data_type d);
 
 
@@ -8,14 +9,14 @@ char* label(data_type d);
 int main(int argc, char *argv[]){
 
   srand(time(NULL));
-  int offset = 0;
+  uint offset = 0;
 
   int c;
   opterr = 0;
   const char* options = "lc::ph";
-  bool load = false, check = false, pull = false;
+  bool load = false, check = false;//, pull = false;
 
-  std::string helpMessage = "To run the full program:\n 1) to/from Data Hold: ./A3 with options \n-l for (l)oading more data into the data hold, \n-c for enqueing data to be (c)hecked (with an optional argument to start pulling from later in the data hold) (NOTE: must be entered as -c15 NOT -c 15 or -c=15 for instance), \n-p for dequeing/(p)ulling data from being checked\n\n 2) to/from the checking process: ./B3 \n\n 3) to finish (i.e. clean up): ./ab3Clean \n\n\n";
+  const char* helpMessage = "To run the full program:\n 1) to/from Data Hold: ./A3 with options \n-l for (l)oading more data into the data hold, \n-c for enqueing data to be (c)hecked (with an optional argument to start pulling from later in the data hold) (NOTE: must be entered as -c15 NOT -c 15 or -c=15 for instance), \n-p for dequeing/(p)ulling data from being checked\n\n 2) to/from the checking process: ./B3 \n\n 3) to finish (i.e. clean up): ./ab3Clean \n\n\n";
 
   while( (c = getopt(argc, argv, options)) != -1 || argc == 1){
     switch(c){
@@ -31,9 +32,9 @@ int main(int argc, char *argv[]){
       break;
 
       //Dequeuing data from being checked
-    case 'p':
+      /*case 'p':
       pull = true;
-      break;
+      break;*/
 
       //User either didn't enter arguments or raised the help flag
     case 'h':
@@ -52,28 +53,27 @@ int main(int argc, char *argv[]){
     
     //create queues for communication between processes
     message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(std_ID));
-    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(std_ID));
+    //    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(std_ID));
 
 
 
-
+    //Load Data Into Memory Initially
     if(load){
-
-      //Fill Shared Memory with "data"  
       //alloc_inst.allocate(DATA_HOLD_SIZE*sizeof(int));
-      for(int i = 0; i < DATA_HOLD_SIZE; i++){
+      for(uint i = 0; i < DATA_HOLD_SIZE; i++){
 	//alloc_inst.allocate(sizeof(i));
-	//std::cout<<ID<<"\n";
 
-	segment.construct<data_type>(label(i))(i);
+	segment.construct<data_type>(label(i))(newData(i));
       }
 
       std::cout<<"Loaded\n";
 
     }
 
+
+    //Continuously Send Data to be Checked
     if(check){
-      int i = offset;
+      uint i = offset;
       while (1) {
 	while(!toCheckQ->try_send(label(i++), sizeof(std_ID), priority) ){
 	  usleep(1000);
@@ -95,9 +95,20 @@ int main(int argc, char *argv[]){
 }
 
 
+
+data_type newData(uint d){
+  /*  std::sprintf(temp, "%d", d);
+      return temp; */
+  return (data_type)d;
+}
+
+
+
 char* label(data_type d){
-  if( 0 == strcmp(typeid(d).name(), typeid(int).name()) ) std::sprintf(ID, std_ID_format, d);
-  else return "unknown type";
+  /*  if( 0 == strcmp(typeid(d).name(), typeid(int).name()) ) std::sprintf(ID, std_ID_format, d);
+      else return NULL; */
+
+  std::sprintf(ID, std_ID_format, d);
 
   return ID;
 }

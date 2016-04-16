@@ -16,13 +16,13 @@ data_type *temp = (data_type *)malloc(sizeof(data_type *));
 //typedef allocator<data_type, managed_shared_memory::segment_manager> data_allocator; 
 
 
-char* std_ID = "i_1024";
-char* std_ID_format = "i_%04d";
+const char* std_ID = "i_1024";
+const char* std_ID_format = "i_%04d";
 char* ID = (char *)malloc(sizeof(std_ID));
 std::pair<data_type*, std::size_t> d;
 
-unsigned int DATA_HOLD_SIZE = 20;
-unsigned int TO_Q_SIZE = 5;
+unsigned int DATA_HOLD_SIZE = 15;
+unsigned int TO_Q_SIZE = 2;
 unsigned int FROM_Q_SIZE = 5;
 
 

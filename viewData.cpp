@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
     managed_shared_memory segment(open_only, "segment");
 
     do{
-      for(int i = 0; i < DATA_HOLD_SIZE; i++){
+      for(uint i = 0; i < DATA_HOLD_SIZE; i++){
 	std::sprintf(ID, std_ID_format, i);
 	d = segment.find<data_type>(ID);
 	std::cout<<ID<<": "<<*d.first<<"\n";

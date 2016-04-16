@@ -1,20 +1,23 @@
 #!/bin/bash
 
-read -p "would you like to compile? (y/n): " ans
+clear
 
+read -p "would you like to compile? (y/n): " ans
 if [ $ans = "y" ] || [ $ans = "Y" ]
 then
-    clear
     echo "compiling"
     make
+
+else
+    read -p "would you like to clean up the memory first? (NOTE: This is already done if you just compiled) (y/n): " ans
+    if [ $ans = 'y' ] || [ $ans = 'Y' ]
+    then
+	./ab3Clean
+    fi
+
 fi
 
-read -p "would you like to clean up the memory first? (NOTE: This is already done if you just compiled) (y/n): " ans
-
-if [ $ans = 'y' ] || [ $ans = 'Y' ]
-then
-    ./ab3Clean
-fi
+clear
 
 echo "loading"
 ./A3 -l

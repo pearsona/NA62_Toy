@@ -16,8 +16,10 @@ all:
 	$(CC) $(CFLAGS1) ab3Clean.cpp
 	$(CC) $(CFLAGS2) ab3Clean.o -o ab3Clean
 
+
 	$(CC) $(CFLAGS1) viewData.cpp
 	$(CC) $(CFLAGS2) viewData.o -o viewData	
+
 
 	make clean
 
