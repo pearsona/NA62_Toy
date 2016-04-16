@@ -1,11 +1,13 @@
 #include "shared.hpp"
 
 //Prototypes
-void process(data_type *d);
+void process(data_type *d, data_type randomness);
 
 
 //Main
 int main(int argc, char *argv[]){
+
+  srand(time(NULL)); 
 
   try{
     managed_shared_memory segment(open_only, "segment");
@@ -18,11 +20,11 @@ int main(int argc, char *argv[]){
 
     //Try to dequeue "data" to be checked, check it, and try to enqueue it
     while (1) {
-      while( !toCheckQ->try_receive((void *)name, sizeof("i_1024"), recvd_size, priority) || recvd_size != sizeof("i_1024") ) {
+      while( !toCheckQ->try_receive((void *)ID, sizeof(std_ID), recvd_size, priority) || recvd_size != sizeof(std_ID) ) {
           usleep(1);
       }
-      d = segment.find<data_type>(name);
-      process(d.first);
+      d = segment.find<data_type>(ID);
+      process(d.first, rand() % 2);
     }
 
   } catch(interprocess_exception e){
@@ -33,8 +35,6 @@ int main(int argc, char *argv[]){
 }
 
 
-void process(data_type *d){
-  srand(time(NULL)); 
-  *d = rand() % 2;
-  usleep(100);
+void process(data_type *d, data_type randomness){
+  *d = randomness;
 }

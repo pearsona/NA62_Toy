@@ -3,7 +3,7 @@
 int main(int argc, char* argv[]){
 
   bool continuous = false;
-  int wait_time = 0; //number of centiseconds between refresh
+  int wait_time = 0; //number of seconds between refresh
 
   int c;
   opterr = 0;
@@ -24,12 +24,12 @@ int main(int argc, char* argv[]){
 
     do{
       for(int i = 0; i < DATA_HOLD_SIZE; i++){
-	std::sprintf(name, "i_%04d", i);
-	d = segment.find<data_type>(name);
-	std::cout<<name<<": "<<*d.first<<"\n";
+	std::sprintf(ID, std_ID_format, i);
+	d = segment.find<data_type>(ID);
+	std::cout<<ID<<": "<<*d.first<<"\n";
 	
       }
-      for(int i = 0; i < wait_time; i++) usleep(100000); //1 centisecond
+      for(int i = 0; i < wait_time; i++) usleep(1000000); //1 second
     }while(continuous);
 
   

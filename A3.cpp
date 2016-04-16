@@ -51,8 +51,8 @@ int main(int argc, char *argv[]){
       
     
     //create queues for communication between processes
-    message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof("i_1024"));
-    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof("i_1024"));
+    message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(std_ID));
+    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(std_ID));
 
 
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]){
       //alloc_inst.allocate(DATA_HOLD_SIZE*sizeof(int));
       for(int i = 0; i < DATA_HOLD_SIZE; i++){
 	//alloc_inst.allocate(sizeof(i));
-	//std::cout<<name<<"\n";
+	//std::cout<<ID<<"\n";
 
 	segment.construct<data_type>(label(i))(i);
       }
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
     if(check){
       int i = offset;
       while (1) {
-	while(!toCheckQ->try_send(label(i++), sizeof("i_1024"), priority) ){
+	while(!toCheckQ->try_send(label(i++), sizeof(std_ID), priority) ){
 	  usleep(1000);
 	}
 	usleep(1000);
@@ -96,8 +96,8 @@ int main(int argc, char *argv[]){
 
 
 char* label(data_type d){
-  if( 0 == strcmp(typeid(d).name(), typeid(int).name()) ) std::sprintf(name, "i_%04d", d);
+  if( 0 == strcmp(typeid(d).name(), typeid(int).name()) ) std::sprintf(ID, std_ID_format, d);
   else return "unknown type";
 
-  return name;
+  return ID;
 }

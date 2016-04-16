@@ -13,10 +13,12 @@ using namespace boost::interprocess;
 typedef int data_type;
 data_type *temp = (data_type *)malloc(sizeof(data_type *));
 
-typedef allocator<data_type, managed_shared_memory::segment_manager> data_allocator; 
+//typedef allocator<data_type, managed_shared_memory::segment_manager> data_allocator; 
 
 
-char* name = (char *)malloc(sizeof("i_1024"));
+char* std_ID = "i_1024";
+char* std_ID_format = "i_%04d";
+char* ID = (char *)malloc(sizeof(std_ID));
 std::pair<data_type*, std::size_t> d;
 
 unsigned int DATA_HOLD_SIZE = 20;
