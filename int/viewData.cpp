@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
     char *ID = (char *)malloc(sizeof(std_ID));
 
     do{
-      for(uint i = 1; i < DATA_HOLD_SIZE; i++){
+      for(uint i = 0; i < DATA_HOLD_SIZE; i++){
 	ID = label(i);
 	d = segment.find<data_type>(ID);
 	std::cout<<ID<<": "<<*d.first<<"\n";

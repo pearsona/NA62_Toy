@@ -1,22 +1,45 @@
 #include <cstdlib>
 #include <iostream>
-#include <string>
 #include <unistd.h>
 #include <time.h>
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <boost/interprocess/mapped_region.hpp>
+#include <typeinfo>
+#include <boost/lexical_cast.hpp>
+#include <boost/container/string.hpp>
+#include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
 
 using namespace boost::interprocess;
 
-typedef bool data_type;
-data_type *temp = (data_type *)malloc(sizeof(data_type *));
+typedef boost::container::string string;
+typedef string data_type;
+data_type std_data = "00"; data_type temp = std_data;
+
+//typedef allocator<data_type, managed_shared_memory::segment_manager> data_allocator; 
 
 
-static int DATA_HOLD_SIZE = 25*sizeof(data_type);
-static int TO_Q_SIZE = 5;
-static int FROM_Q_SIZE = 5;
+const char* std_ID = "event_1024";
+const char* std_ID_format = "event_%04d";
+std::pair<data_type*, std::size_t> d;
+
+uint DATA_HOLD_SIZE = 15;
+uint TO_Q_SIZE = 5;
+uint FROM_Q_SIZE = 5;
 
 
 std::size_t recvd_size;
-unsigned int priority = 0;
+uint priority = 0;
+
+
+char* label(uint n){
+
+  char* ID = (char*)malloc(sizeof(std_ID));
+  std::sprintf(ID, std_ID_format, n);
+  
+  return ID;
+}
+
+data_type newData(uint n){
+  return (boost::lexical_cast<boost::container::string>(n % 2) + (boost::lexical_cast<boost::container::string>((n + 1) % 2)));
+  //return (boost::lexical_cast<boost::container::string>(n));
+}
