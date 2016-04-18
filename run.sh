@@ -2,14 +2,14 @@
 
 clear
 
-read -p "would you like to compile? (y/n): " ans
+read -p "Would you like to compile? (y/n): " ans
 if [ $ans = "y" ] || [ $ans = "Y" ]
 then
-    echo "compiling"
+    echo -e "\ncompiling"
     make
 
 else
-    read -p "would you like to clean up the memory first? (NOTE: This is already done if you just compiled) (y/n): " ans
+    read -p "Would you like to clean up the memory first? (NOTE: This is already done if you just compiled) (y/n): " ans
     if [ $ans = 'y' ] || [ $ans = 'Y' ]
     then
 	./ab3Clean
@@ -17,9 +17,7 @@ else
 
 fi
 
-clear
-
-echo "loading"
+echo -e "\nloading"
 ./A3 -l
 
 echo "receiving"
@@ -29,7 +27,7 @@ echo "sending"
 ./A3 -c &
 
 
-read -p "Command line arguments to viewData? (e.g. -c1 would be refresh every second, nothing would be only output once): " ans
+read -p "Command line arguments to viewData? e.g. -c1 would be refresh every second (maybe longer depending on speed of other processes) and no arguments (i.e. press enter) would be only output once: " ans
 
-echo "watching"
+echo -e "\nwatching"
 ./viewData $ans
