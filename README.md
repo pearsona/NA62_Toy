@@ -7,10 +7,10 @@ Executing ./[run.sh](run.sh) and following the prompts should do everything nece
 # What's in Here?
 In the root directory, there should be: <br/>
    (i) [run.sh](run.sh): Described above <br/>
-   (ii) [A3.cpp](A3.cpp): Loads data into memory (-l) and enqueues data to be checked (-c) <br/>
-   (iii) [B3.cpp](B3.cpp): Checks/"processes" data <br/>
+   (ii) [A.cpp](A.cpp): Loads data into memory (-l) and enqueues data to be checked (-c) <br/>
+   (iii) [B.cpp](B.cpp): Checks/"processes" data <br/>
    (iv) [viewData.cpp](viewData.cpp): Prints shared memory to screen <br/>
-   (v) [ab3Clean.cpp](ab3Clean.cpp): Removes all instances of shared memory created by the above processes <br/>
+   (v) [Clean.cpp](Clean.cpp): Removes all instances of shared memory created by the above processes <br/>
    (vi) [shared.hpp](shared.hpp): Contains library includes/variable declarations/functions for use by above processes <br/>
    (vii) [Makefile](Makefile): make <br/>
    (viii) [int/](int/): Contains simpler/older versions of above that work with ints as "data" instead of strings <br/>
