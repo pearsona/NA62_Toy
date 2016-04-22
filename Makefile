@@ -5,16 +5,16 @@ CFLAGS2=-L /lib -lrt -lpthread
 all:
 	make prepare
 
-	$(CC) $(CFLAGS1) A3.cpp
-	$(CC) $(CFLAGS2) A3.o -o A3
+	$(CC) $(CFLAGS1) A.cpp
+	$(CC) $(CFLAGS2) A.o -o A
 
 
-	$(CC) $(CFLAGS1) B3.cpp
-	$(CC) $(CFLAGS2) B3.o -o B3
+	$(CC) $(CFLAGS1) B.cpp
+	$(CC) $(CFLAGS2) B.o -o B
 
 
-	$(CC) $(CFLAGS1) ab3Clean.cpp
-	$(CC) $(CFLAGS2) ab3Clean.o -o ab3Clean
+	$(CC) $(CFLAGS1) Clean.cpp
+	$(CC) $(CFLAGS2) Clean.o -o Clean
 
 
 	$(CC) $(CFLAGS1) viewData.cpp
@@ -24,8 +24,8 @@ all:
 	make clean
 
 prepare:
-	-./ab3Clean
-	-rm A3 B3 ab3Clean viewData
+	-./Clean
+	-rm A B Clean viewData
 
 clean:
-	-rm *.o
+	rm *.o
