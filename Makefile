@@ -5,20 +5,20 @@ CFLAGS2=-L /lib -lrt -lpthread
 all:
 	make prepare
 
-	$(CC) $(CFLAGS1) A.cpp
-	$(CC) $(CFLAGS2) A.o -o A
+	$(CC) A.cpp $(CFLAGS1)
+	$(CC) A.o -o A $(CFLAGS2)
 
 
-	$(CC) $(CFLAGS1) B.cpp
-	$(CC) $(CFLAGS2) B.o -o B
+	$(CC) B.cpp $(CFLAGS1)
+	$(CC) B.o -o B $(CFLAGS2)
 
 
-	$(CC) $(CFLAGS1) Clean.cpp
-	$(CC) $(CFLAGS2) Clean.o -o Clean
+	$(CC) Clean.cpp $(CFLAGS1)
+	$(CC) Clean.o -o Clean $(CFLAGS2)
 
 
-	$(CC) $(CFLAGS1) viewData.cpp
-	$(CC) $(CFLAGS2) viewData.o -o viewData	
+	$(CC) viewData.cpp $(CFLAGS1)
+	$(CC) viewData.o -o viewData $(CFLAGS2)
 
 
 	make clean
