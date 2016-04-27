@@ -12,22 +12,19 @@ else
     read -p "Would you like to clean up the memory first? (NOTE: This is already done if you just compiled) (y/n): " ans
     if [ $ans = 'y' ] || [ $ans = 'Y' ]
     then
-	./ab3Clean
+	./clean
     fi
 
 fi
 
-echo -e "\nloading"
-./A3 -l
+echo -e "\nloading and sending"
+./A -l &
 
 echo "receiving"
-./B3 &
-
-echo "sending"
-./A3 -c &
+./B &
 
 
-read -p "Command line arguments to viewData? e.g. -c1 would be refresh every second (maybe longer depending on speed of other processes) and no arguments (i.e. press enter) would be only output once: " ans
+read -p "Command line arguments to viewData? e.g. -c1 would refresh every second (maybe longer depending on speed of other processes) and no arguments (i.e. press enter) would only output once: " ans
 
 echo -e "\nwatching"
 ./viewData $ans
