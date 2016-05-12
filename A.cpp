@@ -1,6 +1,5 @@
 #include "shared.hpp"
 
-
 int main(int argc, char* argv[]){
 
   srand(time(NULL));
@@ -26,74 +25,64 @@ int main(int argc, char* argv[]){
     }
   }
 
-
   try{
     //create shared memory
-    managed_shared_memory segment(open_or_create, "segment", DATA_HOLD_SIZE*32*sizeof(std_data));
-    //    data_allocator alloc_inst(segment.get_segment_manager());
-      
-    
+    managed_shared_memory segment(open_or_create, "segment", DATA_HOLD_SIZE*32*sizeof(SerializedEvent));
+  
     //create queues for communication between processes
     message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(int));
-    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(resp_type));
-
-
+    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(l1TriggerResponse));
 
     //Load Data Into Memory Initially
     if(load){
       //alloc_inst.allocate(DATA_HOLD_SIZE*sizeof(int));
-      for(uint i = 1; i <= DATA_HOLD_SIZE; i++){
-	//alloc_inst.allocate(sizeof(i));
-	segment.construct<data_type>(label(i))(newData(i));
+      for(uint event_id = 1; event_id <= DATA_HOLD_SIZE; event_id++){
+	//Creating an Event with random content
+	Event temp_event = newEvent();
+	//Serializing the event
+	SerializedEvent temp_serialized_event = serializeEvent(temp_event);
+
+	//Store the serialized event in the shared memory
+	segment.construct<SerializedEvent>(label(event_id))(temp_serialized_event);
       }
 
-      std::cout<<"Loaded\n";
-
+      std::cout<<"Loaded: "<< DATA_HOLD_SIZE <<" Serialized event into memory\n";
     }
 
-
     //Continuously send data to be checked and receive data from being checked
-    uint i = 1;
-    resp_type *r = (resp_type *)malloc(sizeof(resp_type *));
+    uint event_id_to_process = 1;
+    l1TriggerResponse *response = (l1TriggerResponse *)malloc(sizeof(l1TriggerResponse *));
     while (1) {
       
       //Sending data to be checked
-      while( !toCheckQ->try_send(&i, sizeof(int), priority) ){
+      while( !toCheckQ->try_send(&event_id_to_process, sizeof(int), priority) ){
 	usleep(1000);
       }
-      //usleep(1000);
-      i++;
+      std::cout<<"Sended event id: "<<event_id_to_process<<"\n";
+      event_id_to_process++;
       //Loop back to beginning of shared memory at end
-      if( i > DATA_HOLD_SIZE ) i = 1;
+      if( event_id_to_process > DATA_HOLD_SIZE ) event_id_to_process = 1;
 
 
       //Receiving data from being checked
-      while( !fromCheckQ->try_receive((void *)r, sizeof(std_resp), recvd_size, priority) ){ usleep(100); }
+      while( !fromCheckQ->try_receive((void *)response, sizeof(std_resp), recvd_size, priority) ){ 
+         usleep(1000); 
+      }
 
       if( recvd_size != sizeof(std_resp) ) exit(1);
-      //std::cout<<"A: "<<r<<"\n";
-      int x = deserialize(*r);
 
-      //If odd, then make even
-      if( x < 0  ){
-	char* ID = label(std::abs(x));
-	d = segment.find<data_type>(ID);
+      std::cout<<"Received: "<< response->event_id << " Result: "<< response->l1_result <<"\n";
 
-	if( d.first != 0 ){
-	  *d.first *= 2;
-	}
-	else continue; //couldn't find this piece of data...
-	
-      }
-      
-    }
-
-
-  
+      if (response->l1_result) {
+	//good event send L1 request
+	std::cout<<"Sending L1 request for event id: "<< response->event_id <<"\n";
+      } else {
+        //Bad event 
+	std::cout<<"Discard event id: "<< response->event_id <<"\n";
+      }   
+    }  
   } catch(interprocess_exception& e) {
     std::cout<<e.what()<<std::endl;
   }
- 
-
   return 0;
 }

@@ -12,24 +12,24 @@
 
 using namespace boost::interprocess;
 
-
 typedef boost::container::string string;
 
-typedef uint32_t data_type;
-data_type std_data = 0;
+typedef uint32_t Event;
+typedef uint32_t SerializedEvent;
+SerializedEvent std_data = 0;
 
-typedef int resp_type;
-resp_type std_resp = 0;
 
-/*typedef char* resp_type;
-  resp_type std_resp = "00000";*/
-
-//typedef allocator<data_type, managed_shared_memory::segment_manager> data_allocator; 
+struct l1TriggerResponse {
+	uint event_id;
+	bool l1_result;
+};
+l1TriggerResponse std_resp;
 
 
 const char* std_ID = "event_1024";
 const char* std_ID_format = "event_%04d";
-std::pair<data_type*, std::size_t> d;
+
+std::pair<SerializedEvent*, std::size_t> d;
 
 uint DATA_HOLD_SIZE = 15;
 uint TO_Q_SIZE = 5;
@@ -39,12 +39,9 @@ uint FROM_Q_SIZE = 5;
 std::size_t recvd_size;
 uint priority = 0;
 
-
 char* label(uint n){
-
   char* ID = (char*)malloc(sizeof(std_ID));
-  std::sprintf(ID, std_ID_format, n);
-  
+  std::sprintf(ID, std_ID_format, n);  
   return ID;
 }
 
@@ -52,54 +49,29 @@ char* label(char *s){
   return label(atoi(s));
 }
 
-
-data_type newData(uint n){
-  //return (boost::lexical_cast<boost::container::string>(n % 2) + (boost::lexical_cast<boost::container::string>((n + 1) % 2)));
-  //return (boost::lexical_cast<boost::container::string>(n));
-
-  return n;
+Event newEvent(){
+  //Generate an event with random content
+  //Generating Randon content number between 1 and 1000
+  return (rand() % 1000) + 1; 
 }
+
+SerializedEvent serializeEvent(Event event) {
+   //Just do noting here now, will be implement the logic for serialize a farm event
+   return (SerializedEvent) event;
+} 
+
+Event unserializeEvent(SerializedEvent serialized_event) {
+   //Just do noting here now, will be implement the logic for unserialize a farm event
+   return (Event) serialized_event;
+} 
 
 /*
-void process(data_type *d, uint randomness){
-  *d = randomness;
-  *d = (randomness % 2) ? "true" : "false";
-  string zero =  boost::lexical_cast<boost::container::string>(0);
-  string one =  boost::lexical_cast<boost::container::string>(1);
-  *d = (randomness % 2) ? one + one : zero + zero;
-}
-*/
-
-char parity(data_type* d){
-  return boost::lexical_cast<uint>(*d) % 2 ? '1' : '0';
+ * L1 trigger function
+ */
+bool computeL1Trigger(Event event) {
+   if (event % 2 == 0) {
+       return 1; //odd
+   } 
+   return 0; //even
 }
 
-
-
-resp_type serialize(char b, data_type* x){
-  resp_type r = *x;
-  if( b == '1' ) r *= -1; //odd --> negative
-  
-  return r;
- 
-
-  /*char resp[5];// = (resp_type)malloc(sizeof(std_resp)*5);
-  resp[0] = b;
-  resp[1] = (char)x;
-
-  return resp;
-  */
-}
-
-int deserialize(resp_type r){
-  /*string s = boost::lexical_cast<boost::container::string>(std::abs(x));
-
-  return ( x > 0 ? "0" : "1" ) + s;
-  */
-
-  /*char c[4];
-  for(int i = 0; i < 4; i++) c[i] = r[i + 1];
-  */
-
-  return r;//atoi(r);
-}

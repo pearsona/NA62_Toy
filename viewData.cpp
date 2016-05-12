@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     do{
       for(uint i = 1; i <= DATA_HOLD_SIZE; i++){
 	ID = label(i);
-	d = segment.find<data_type>(ID);
+	d = segment.find<SerializedEvent>(ID);
 	std::cout<<ID<<": "<<*d.first<<"\n";
       }
       for(int i = 0; i < wait_time; i++) usleep(1000000); //1 second
