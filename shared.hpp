@@ -9,6 +9,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
+#include "structs/TriggerResponse.h"
 
 using namespace boost::interprocess;
 
@@ -17,14 +18,6 @@ typedef boost::container::string string;
 typedef uint32_t Event;
 typedef uint32_t SerializedEvent;
 SerializedEvent std_data = 0;
-
-
-struct l1TriggerResponse {
-	uint event_id;
-	bool l1_result;
-};
-l1TriggerResponse std_resp;
-
 
 const char* std_ID = "event_1024";
 const char* std_ID_format = "event_%04d";
@@ -52,18 +45,18 @@ char* label(char *s){
 Event newEvent(){
   //Generate an event with random content
   //Generating Randon content number between 1 and 1000
-  return (rand() % 1000) + 1; 
+  return (rand() % 1000) + 1;
 }
 
 SerializedEvent serializeEvent(Event event) {
    //Just do noting here now, will be implement the logic for serialize a farm event
    return (SerializedEvent) event;
-} 
+}
 
 Event unserializeEvent(SerializedEvent serialized_event) {
    //Just do noting here now, will be implement the logic for unserialize a farm event
    return (Event) serialized_event;
-} 
+}
 
 /*
  * L1 trigger function
@@ -71,7 +64,7 @@ Event unserializeEvent(SerializedEvent serialized_event) {
 bool computeL1Trigger(Event event) {
    if (event % 2 == 0) {
        return 1; //odd
-   } 
+   }
    return 0; //even
 }
 
