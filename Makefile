@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS1=-std=c++11 -c -Wall -I/usr/include/boost -g
-CFLAGS2=-L /lib -lrt -lpthread -lboost_system -lboost_thread -lglog
+CFLAGS2=-L /lib -lrt -lpthread -lboost_system -lboost_thread
 
 all:
 	make prepare
@@ -10,7 +10,7 @@ all:
 	$(CC) exceptions/NA62Error.cpp -I. $(CFLAGS1)
 
 
-	$(CC) A.cpp -I. $(CFLAGS1) -DUSE_GLOG
+	$(CC) A.cpp -I. $(CFLAGS1)
 	$(CC) A.o QueueReceiver.o AExecutable.o NA62Error.o -o A $(CFLAGS2)
 
 
@@ -33,4 +33,4 @@ prepare:
 	-#rm A B Clean viewData
 
 clean:
-	rm *.o
+	rm *.o A B Clean

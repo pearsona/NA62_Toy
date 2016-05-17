@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
 		while (1) {
 			//Sending data to be checked
 			while( !toCheckQ->try_send(&event_id_to_process, sizeof(int), priority) ){
-				sleep(1000);
+				sleep(1);
 			}
 			LOG_INFO("Sended event id: "<<event_id_to_process);
 			event_id_to_process++;
