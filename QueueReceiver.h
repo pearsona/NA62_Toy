@@ -8,9 +8,10 @@
 #ifndef QUEUERECEIVER_H_
 #define QUEUERECEIVER_H_
 
-#include <utils/AExecutable.h>
-#include <atomic>
-#include <boost/interprocess/ipc/message_queue.hpp>
+#include "shared.hpp"
+//#include <boost/interprocess/ipc/message_queue.hpp>
+
+
 
 namespace na62 {
 
@@ -19,6 +20,8 @@ public:
 	QueueReceiver();
 	virtual ~QueueReceiver();
 	static boost::interprocess::message_queue *fromCheckQ_;
+	static boost::interprocess::message_queue *toCheckQ_;
+	static boost::interprocess::managed_shared_memory *l2_shm;
     //message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(l1TriggerResponse));
 
 private:

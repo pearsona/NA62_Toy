@@ -20,11 +20,12 @@ fi
 echo -e "\nloading and sending"
 ./A -l &
 
-echo "receiving"
+
+echo -e "\nreceiving"
 ./B &
 
 
-read -p "Command line arguments to viewData? e.g. -c1 would refresh every second (maybe longer depending on speed of other processes) and no arguments (i.e. press enter) would only output once: " ans
+#read -p "Command line arguments to viewData? e.g. -c1 would refresh every second (maybe longer depending on speed of other processes) and no arguments (i.e. press enter) would only output once: " ans
 
-echo -e "\nwatching"
-./viewData $ans
+#echo -e "\nwatching"
+#./viewData $ans

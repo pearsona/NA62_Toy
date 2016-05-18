@@ -7,7 +7,8 @@ int main(int argc, char *argv[]){
   using namespace boost::interprocess;
 
   try{
-    shared_memory_object::remove("segment");
+    shared_memory_object::remove("l1_shm");
+    shared_memory_object::remove("l2_shm");
     
     //message_queue::remove("data");
     message_queue::remove("toCheck");

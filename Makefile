@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS1=-std=c++11 -c -Wall -I/usr/include/boost -g
+CFLAGS1=-std=c++11 -c -I/usr/include/boost -g #-Wall
 CFLAGS2=-L /lib -lrt -lpthread -lboost_system -lboost_thread
 
 all:
@@ -22,15 +22,15 @@ all:
 	$(CC) Clean.o -o Clean $(CFLAGS2)
 
 
-	$(CC) viewData.cpp $(CFLAGS1)
-	$(CC) viewData.o -o viewData $(CFLAGS2)
+#$(CC) viewData.cpp $(CFLAGS1)
+#$(CC) viewData.o -o viewData $(CFLAGS2)
 
 
-#	make clean
+	make clean
 
 prepare:
 	-./Clean
-	-#rm A B Clean viewData
+	-rm A B Clean viewData
 
 clean:
-	rm *.o A B Clean
+	rm *.o

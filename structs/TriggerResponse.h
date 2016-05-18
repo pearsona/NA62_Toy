@@ -11,8 +11,9 @@
 //#include <stdint.h>
 
 struct TriggerResponse {
-	uint event_id;
-	bool l1_result;
+  uint event_id;
+  uint level;
+  bool result;
 };
 
 #endif /* TRIGGERRESPONSE_H_ */
