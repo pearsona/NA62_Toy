@@ -32,7 +32,7 @@ typedef uint32_t SerializedEvent;
 static const char* std_ID = "event_1024";
 static const char* std_ID_format = "event_%04d";
 
-static std::pair<SerializedEvent*, std::size_t> d;
+static std::pair<SerializedEvent*, std::size_t> l1_d;
 static std::pair<SerializedEvent*, std::size_t> l2_d;
 
 
@@ -80,7 +80,7 @@ namespace na62 {
 //==========
 
 static char* label(uint n){
-  char* ID = (char*)malloc(sizeof(std_ID));
+  char* ID = new char[sizeof(std_ID)];
   std::sprintf(ID, std_ID_format, n);  
   return ID;
 }

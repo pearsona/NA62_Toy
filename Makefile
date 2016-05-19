@@ -3,7 +3,8 @@ CFLAGS1=-std=c++11 -c -I/usr/include/boost -g #-Wall
 CFLAGS2=-L /lib -lrt -lpthread -lboost_system -lboost_thread
 
 all:
-	make prepare
+	-./Clean
+	-rm A B
 
 	$(CC) utils/AExecutable.cpp $(CFLAGS1)
 	$(CC) QueueReceiver.cpp -I. $(CFLAGS1)
@@ -17,20 +18,13 @@ all:
 	$(CC) B.cpp $(CFLAGS1)
 	$(CC) B.o -o B $(CFLAGS2)
 
-
-	$(CC) Clean.cpp $(CFLAGS1)
-	$(CC) Clean.o -o Clean $(CFLAGS2)
-
-
-#$(CC) viewData.cpp $(CFLAGS1)
-#$(CC) viewData.o -o viewData $(CFLAGS2)
-
-
 	make clean
 
-prepare:
-	-./Clean
-	-rm A B Clean viewData
+Clean:
+	-rm Clean
+	$(CC) Clean.cpp $(CFLAGS1)
+	$(CC) Clean.o -o Clean $(CFLAGS2)
+	rm Clean.o
 
 clean:
 	rm *.o
