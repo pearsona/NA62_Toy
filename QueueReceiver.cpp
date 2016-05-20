@@ -21,8 +21,8 @@ namespace na62 {
   QueueReceiver::QueueReceiver(){
     fromCheckQ_ = new message_queue(open_or_create, "fromCheck", 15, sizeof(TriggerResponse));
     toCheckQ_ = new message_queue(open_or_create, "toCheck", 15, sizeof(EventID));
-    l1_shm = new managed_shared_memory(open_or_create, "l1_shm", L1_MEM_SIZE*32*sizeof(SerializedEvent));
-    l2_shm = new managed_shared_memory(open_or_create, "l2_shm", L2_MEM_SIZE*32*sizeof(SerializedEvent));
+    l1_shm = new managed_shared_memory(open_or_create, "l1_shm", L1_MEM_SIZE*32*sizeof(l1_SerializedEvent));
+    l2_shm = new managed_shared_memory(open_or_create, "l2_shm", L2_MEM_SIZE*32*sizeof(l2_SerializedEvent));
     running_ = true;
   }
 
@@ -54,7 +54,7 @@ namespace na62 {
 	    continue;
 	  }
 
-	  LOG_INFO("Received l"<<response->level<<" event id:"<< response->event_id << " Result: "<< response->result);
+	  //LOG_INFO("Received l"<<response->level<<" event id:"<< response->event_id << " Result: "<< response->result);
 	  
 	  char *ID = label(response->event_id);
 
@@ -69,15 +69,17 @@ namespace na62 {
 	    //L1 Processing
 	    //==============
 	    if (response->level == 1){
-	      LOG_INFO(" -> Sending L1 request for event id: "<< response->event_id);
+	      //LOG_INFO(" -> Sending L1 request for event id: "<< response->event_id);
 	      
 	      //Find and Destroy Event from L1 SHM and store in L2 SHM
 	      //======================================================
-	      l1_d = l1_shm->find<SerializedEvent>(ID);
+	      l1_d = l1_shm->find<l1_SerializedEvent>(ID);
 	      
 	      if( l1_d.first ){
-		l1_shm->destroy<SerializedEvent>(ID);
-		l2_shm->construct<SerializedEvent>(ID)(*l1_d.first);
+		l1_shm->destroy<l1_SerializedEvent>(ID);
+		//QUESTION: This was throwing a library exception, but will 
+		// run with std::nothrow option... why is this necessary?
+		l2_shm->construct<l2_SerializedEvent>(ID, std::nothrow)(l1tol2(*l1_d.first));
 	      }
 	      else continue;
 
@@ -89,27 +91,27 @@ namespace na62 {
 	      ev->level = 2;
 
 	      while( !toCheckQ_->try_send(ev, sizeof(EventID), priority) ){
-		sleep(1);
-	      
-		LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
+		//usleep(10);
 	      }
+	      //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
+	      
 	    }
 	    //L2 Processing
 	    //==============
 	    else if (response->level == 2){
-	      LOG_INFO(" -> Sending L2 request for event id: "<< response->event_id);  
+	      //LOG_INFO(" -> Sending L2 request for event id: "<< response->event_id);  
 	    }
 
 	  } 
 	  //Event is Bad
 	  //=============
 	  else {
-	    LOG_INFO(" -> Discard event id: "<< response->event_id << "from L"<< response->level << " triggering");
+	    //LOG_INFO(" -> Discard event id: "<< response->event_id << "from L"<< response->level << " triggering");
 	    
 	    //Delete Event from Memory
 	    //=========================
-	    if( !l1_shm->destroy<SerializedEvent>(ID) )
-	      l2_shm->destroy<SerializedEvent>(ID);
+	    if( !l1_shm->destroy<l1_SerializedEvent>(ID) )
+	      l2_shm->destroy<l2_SerializedEvent>(ID);
 
 	  }
 
@@ -119,6 +121,9 @@ namespace na62 {
       } catch(interprocess_exception& e) {
 	LOG_ERROR(e.what());
       }
+
+
+      //usleep(1000000);
     }
   }
 

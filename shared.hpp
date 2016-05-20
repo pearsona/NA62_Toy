@@ -26,24 +26,26 @@ using namespace boost::interprocess;
 
 typedef boost::container::string string;
 
-typedef uint32_t Event;
-typedef uint32_t SerializedEvent;
+typedef uint32_t l1_Event;
+typedef uint32_t l1_SerializedEvent;
+typedef uint64_t l2_Event;
+typedef uint64_t l2_SerializedEvent;
 
 static const char* std_ID = "event_1024";
 static const char* std_ID_format = "event_%04d";
 
-static std::pair<SerializedEvent*, std::size_t> l1_d;
-static std::pair<SerializedEvent*, std::size_t> l2_d;
+static std::pair<l1_SerializedEvent*, std::size_t> l1_d;
+static std::pair<l2_SerializedEvent*, std::size_t> l2_d;
 
 
 static std::size_t recvd_size;
 static uint priority = 0;
 
 
-static uint L1_MEM_SIZE = 15;
+static uint L1_MEM_SIZE = 10;
 static uint L2_MEM_SIZE = 10;
-static uint TO_Q_SIZE = 5;
-static uint FROM_Q_SIZE = 5;
+static uint TO_Q_SIZE = 2;
+static uint FROM_Q_SIZE = 2;
 
 
 
@@ -79,6 +81,9 @@ namespace na62 {
 // Functions
 //==========
 
+
+//Producing Labels for l1_Events
+//============================
 static char* label(uint n){
   char* ID = new char[sizeof(std_ID)];
   std::sprintf(ID, std_ID_format, n);  
@@ -89,20 +94,42 @@ static char* label(char *s){
   return label(atoi(s));
 }
 
-static Event newEvent(){
+
+//Produce a New l1_Event
+//====================
+static l1_Event newEvent(){
   //Generate an event with random content
   //Generating Randon content number between 1 and 1000
   return (rand() % 1000) + 1;
 }
 
-static SerializedEvent serializeEvent(Event event) {
+
+//Serialization and Unserialization
+//==================================
+static l1_SerializedEvent serializeEvent(l1_Event event) {
   //Just do noting here now, will be implement the logic for serialize a farm event
-  return (SerializedEvent) event;
+  return (l1_SerializedEvent) event;
 }
 
-static Event unserializeEvent(SerializedEvent serialized_event) {
+static l1_SerializedEvent serializeEvent(l2_Event event) {
+
+  return (l2_SerializedEvent) event;
+}
+
+static l1_Event unserializeEvent(l1_SerializedEvent serialized_event) {
    //Just do noting here now, will be implement the logic for unserialize a farm event
-   return (Event) serialized_event;
+   return (l1_Event) serialized_event;
+}
+
+static l2_Event unserializeEvent(l2_SerializedEvent serialized_event) {
+  return (l2_Event) serialized_event;
+}
+
+
+//L1 to L2 Conversion
+//====================
+static l2_Event l1tol2(l1_Event event){
+  return (l2_Event) event;
 }
 
 
@@ -110,7 +137,7 @@ static Event unserializeEvent(SerializedEvent serialized_event) {
 /*
  * L1 trigger function
  */
-static bool computeL1Trigger(Event event) {
+static bool computeL1Trigger(l1_Event event) {
    if (event % 2 == 0) {
        return 1; //even
    }
@@ -121,7 +148,7 @@ static bool computeL1Trigger(Event event) {
 /*
  * L2 trigger function
  */
-static bool computeL2Trigger(Event event) {
+static bool computeL2Trigger(l2_Event event) {
   if( event % 3 == 0 ) {
     return 1; //divisible by 3
   }

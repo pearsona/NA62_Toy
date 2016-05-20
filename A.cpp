@@ -6,55 +6,17 @@ using namespace na62;
 int main(int argc, char* argv[]){
 
   srand(time(NULL));
-
-
-  //Read Command Line Arguments
-  //============================
-
-  int c;
-  opterr = 0;
-  const char* options = "lh";
-  bool load = false;//, check = false;//, pull = false;
-	
-  const string helpMessage = "To run the full program:\n 1) to/from Data Hold: ./A with options \n\t-l for (l)oading data into the data hold\n\n 2) to/from the checking process: ./B \n\n 3) to finish (i.e. clean up): ./clean \n\n\n";
-	
-  while( (c = getopt(argc, argv, options)) != -1){
-    switch(c){
-      //Loading data into memory
-    case 'l':
-      load = true;
-      break;
-    case 'h':
-    default:
-      std::cout<<helpMessage;
-      return 1;
-    }
-  }
-
-
-
-
+  
   //Create & Fill Shared Memory, Start Receiver, and Enqueue Data
   //==============================================================
 
   try{
 
-    //Create & Fill (if -l option given on command line) Shared Memory
-    //=================================================================
-    managed_shared_memory *l1_shm = new managed_shared_memory(open_or_create, "l1_shm", L1_MEM_SIZE*32*sizeof(SerializedEvent));
-
-    if( load ){
-      for( uint event_id = 1; event_id <= L1_MEM_SIZE; event_id++ ){
-
-	Event temp_event = newEvent();
-	SerializedEvent temp_serialized_event = serializeEvent(temp_event);
-	l1_shm->construct<SerializedEvent>(label(event_id))(temp_serialized_event);
-
-      }
-      LOG_INFO("Loaded: "<< L1_MEM_SIZE <<" Serialized event into memory");
-    }
-
-
+    //Create SHM and Queue
+    //=====================
+    managed_shared_memory *l1_shm = new managed_shared_memory(open_or_create, "l1_shm", L1_MEM_SIZE*32*sizeof(l1_SerializedEvent));
+    message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(EventID));
+    
 
     //Starting Receiver
     //==================
@@ -63,38 +25,44 @@ int main(int argc, char* argv[]){
 
 
 
-    //Enqueing Data
-    //==============
-    message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(EventID));
-		
-    uint event_id_to_process = 1;
-    uint num_discarded = 0;
+    //Creating and Enqueing Events
+    //=============================
+    uint event_id_to_process = 0;
     EventID *ev = new EventID;
     
     while (1) {
-    
+      usleep(10000);
       ev->id = event_id_to_process;
       ev->level = 1;
 
       
       //Check to Make Sure Event is Still Waiting for L1 Processing
+      // If Not, Add New Event
       //============================================================
       char *ID = label(event_id_to_process);
-      l1_d = l1_shm->find<SerializedEvent>(ID);
-      if( !l1_d.first )
-	if( num_discarded++ >= L1_MEM_SIZE ) break;
-	else continue;
+      l1_d = l1_shm->find<l1_SerializedEvent>(ID);
+      
+      if( !l1_d.first ){
+	l1_Event temp_event = newEvent();
+	l1_SerializedEvent temp_serialized_event = serializeEvent(temp_event);
+	l1_shm->construct<l1_SerializedEvent>(ID)(temp_serialized_event);
+      }
+      
+
 
 
       //Enqueue Data
       //=============
       while( !toCheckQ->try_send(ev, sizeof(EventID), priority) ){
-	sleep(1);
+	//usleep(10);
       }
-      LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
+      //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
 
-      event_id_to_process = (event_id_to_process + 1) % L1_MEM_SIZE;
+      event_id_to_process++;
+      event_id_to_process %= L1_MEM_SIZE + 1;
 
+
+      //usleep(1000000);
     }
 
 
