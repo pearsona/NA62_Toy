@@ -77,9 +77,13 @@ namespace na62 {
 	      
 	      if( l1_d.first ){
 		l1_shm->destroy<l1_SerializedEvent>(ID);
-		//QUESTION: This was throwing a library exception, but will 
-		// run with std::nothrow option... why is this necessary?
-		l2_shm->construct<l2_SerializedEvent>(ID, std::nothrow)(l1tol2(*l1_d.first));
+		l2_SerializedEvent temp_event = serializeEvent(l1tol2(*l1_d.first));
+
+		l2_d.first = l2_shm->find_or_construct<l2_SerializedEvent>(ID)(temp_event);
+		//Question: Any advantage (time/memory) in actually destroying this chunk of memory and constructing it with the new event? Should/Could the below method be used for general replacement of events (i.e. reduce number of function calls) with some sort of flag in each event saying it's ready to be deleted or perhaps a queue of event ID's ready to be deleted?
+		//===========================================================
+		if( l2_d.first ) *l2_d.first = temp_event;
+
 	      }
 	      else continue;
 
