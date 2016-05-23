@@ -8,10 +8,10 @@
 #ifndef QUEUERECEIVER_H_
 #define QUEUERECEIVER_H_
 
-#include "shared.hpp"
-//#include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <atomic>
 
-
+#include "utils/AExecutable.h"
 
 namespace na62 {
 

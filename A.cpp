@@ -1,4 +1,4 @@
-#include "shared.hpp"
+#include "SharedMemoryManager.h"
 
 using namespace na62;
 
@@ -7,23 +7,23 @@ int main(int argc, char* argv[]){
 
   srand(time(NULL));
   
+
+  SharedMemoryManager::initialize();
+ // if (SharedMemoryManager::eraseL1SharedMemory()) {
+//	  LOG_INFO("l1 memory erased");
+  //}
+
   //Create & Fill Shared Memory, Start Receiver, and Enqueue Data
   //==============================================================
 
+
+
+  //Starting Receiver
+  //==================
+  //QueueReceiver* receiver = new QueueReceiver();
+  //receiver->startThread("QueueReceiver");
+
   try{
-
-    //Create SHM and Queue
-    //=====================
-    managed_shared_memory *l1_shm = new managed_shared_memory(open_or_create, "l1_shm", L1_MEM_SIZE*32*sizeof(l1_SerializedEvent));
-    message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(EventID));
-    
-
-    //Starting Receiver
-    //==================
-    QueueReceiver* receiver = new QueueReceiver();
-    receiver->startThread("QueueReceiver");
-
-
 
     //Creating and Enqueing Events
     //=============================
@@ -43,18 +43,15 @@ int main(int argc, char* argv[]){
       l1_d = l1_shm->find<l1_SerializedEvent>(ID);
       
       if( !l1_d.first ){
-	l1_Event temp_event = newEvent();
-	l1_SerializedEvent temp_serialized_event = serializeEvent(temp_event);
-	l1_shm->construct<l1_SerializedEvent>(ID)(temp_serialized_event);
+    	  l1_Event temp_event = newEvent();
+    	  l1_SerializedEvent temp_serialized_event = serializeEvent(temp_event);
+    	  l1_shm->construct<l1_SerializedEvent>(ID)(temp_serialized_event);
       }
-      
-
-
 
       //Enqueue Data
       //=============
       while( !toCheckQ->try_send(ev, sizeof(EventID), priority) ){
-	//usleep(10);
+    	  //usleep(10);
       }
       //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
 
@@ -75,6 +72,7 @@ int main(int argc, char* argv[]){
   /*
    * Join other threads
    */
-  AExecutable::JoinAll();
+  //AExecutable::JoinAll();
+
   return 0;
 }

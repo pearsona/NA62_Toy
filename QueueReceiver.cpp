@@ -5,7 +5,7 @@
  *      Author: marco
  */
 
-#include "shared.hpp"
+#include "QueueReceiver.h"
 
 namespace na62 {
 
