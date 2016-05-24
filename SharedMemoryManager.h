@@ -21,7 +21,7 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 
-#include "structs/EventID.h"
+#include "structs/TriggerMessage.h"
 #include "options/Logging.h"
 
 //TODO move somewhere not here
@@ -33,7 +33,6 @@ typedef uint64_t l2_SerializedEvent;
 
 //using namespace boost::interprocess;
 namespace na62 {
-
 
 class SharedMemoryManager {
 private:
@@ -75,16 +74,50 @@ public:
 	//}
 
 	static inline bool eraseL1SharedMemory() {
-		return boost::interprocess::shared_memory_object::remove("l1_shm");
+		try {
+			return boost::interprocess::shared_memory_object::remove("l1_shm");
+		} catch(boost::interprocess::interprocess_exception& e) {
+			LOG_ERROR(e.what());
+			return false;
+		}
 	}
 
 	static inline bool eraseL2SharedMemory() {
-		return boost::interprocess::shared_memory_object::remove("l2_shm");
+		try {
+			return boost::interprocess::shared_memory_object::remove("l2_shm");
+		} catch(boost::interprocess::interprocess_exception& e) {
+			LOG_ERROR(e.what());
+			return false;
+		}
 	}
 
-	bool storeL1Event(uint event_id_to_process, l1_Event temp_event);
+	static inline bool eraseTriggerQueue() {
+		try {
+			return boost::interprocess::message_queue::remove("trigger_queue");
+		} catch(boost::interprocess::interprocess_exception& e) {
+			LOG_ERROR(e.what());
+			return false;
+		}
+	}
 
+	static inline bool eraseTriggerResponseQueue() {
+		try {
+			return boost::interprocess::message_queue::remove("trigger_response_queue");
+		} catch(boost::interprocess::interprocess_exception& e) {
+			LOG_ERROR(e.what());
+			return false;
+		}
+	}
 
+	static inline void eraseAll() {
+		eraseL1SharedMemory();
+		eraseL2SharedMemory();
+		eraseTriggerQueue();
+		eraseTriggerResponseQueue();
+	}
+
+	static bool storeL1Event(uint event_id_to_process, l1_Event temp_event);
+	static bool popTriggerQueue(TriggerMessage &trigger_message, uint &priority);
 
 	//Serialization and Unserialization
 	//==================================
@@ -109,52 +142,17 @@ public:
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 };
 
 }
 /*
 
-
-
-// Type Definitions and Constants
-//================================
-
-typedef boost::container::string string;
-
-
-
-static const char* std_ID = "event_1024";
-static const char* std_ID_format = "event_%04d";
-
-
 static std::pair<l2_SerializedEvent*, std::size_t> l2_d;
 
-
-static std::size_t recvd_size;
 
 
 // Functions
 //==========
-
-
 
 
 static char* label(char *s){
@@ -162,13 +160,7 @@ static char* label(char *s){
 }
 
 
-//Produce a New l1_Event
-//====================
-static l1_Event newEvent(){
-  //Generate an event with random content
-  //Generating Randon content number between 1 and 1000
-  return (rand() % 1000) + 1;
-}
+
 
 
 

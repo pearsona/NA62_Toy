@@ -1,78 +1,46 @@
 #include "SharedMemoryManager.h"
-
+#include "utils/AExecutable.h"
+#include "QueueReceiver.h"
 using namespace na62;
+
+
+//Produce a New l1_Event
+//====================
+// Will be moved
+l1_Event newEvent(){
+  //Generate an event with random content
+  //Generating Randon content number between 1 and 1000
+  return (rand() % 1000) + 1;
+}
+
 
 
 int main(int argc, char* argv[]){
 
-  srand(time(NULL));
-  
+	srand(time(NULL));
 
-  SharedMemoryManager::initialize();
- // if (SharedMemoryManager::eraseL1SharedMemory()) {
-//	  LOG_INFO("l1 memory erased");
-  //}
+	SharedMemoryManager::initialize();
 
-  //Create & Fill Shared Memory, Start Receiver, and Enqueue Data
-  //==============================================================
-
-
-
-  //Starting Receiver
-  //==================
-  //QueueReceiver* receiver = new QueueReceiver();
-  //receiver->startThread("QueueReceiver");
-
-  try{
-
-    //Creating and Enqueing Events
-    //=============================
-    uint event_id_to_process = 0;
-    EventID *ev = new EventID;
+	//Starting Receiver
+	//==================
+	//QueueReceiver* receiver = new QueueReceiver();
+	//receiver->startThread("QueueReceiver");
+	uint event_id_to_process = 0;
     
-    while (1) {
-      usleep(10000);
-      ev->id = event_id_to_process;
-      ev->level = 1;
+	while (1) {
+		event_id_to_process++;
+    	l1_Event temp_event = newEvent();
+    	LOG_INFO("Cretaed event id: "<<event_id_to_process<<" for l1 processing");
+    	bool result = SharedMemoryManager::storeL1Event(event_id_to_process, temp_event);
 
-      
-      //Check to Make Sure Event is Still Waiting for L1 Processing
-      // If Not, Add New Event
-      //============================================================
-      char *ID = label(event_id_to_process);
-      l1_d = l1_shm->find<l1_SerializedEvent>(ID);
-      
-      if( !l1_d.first ){
-    	  l1_Event temp_event = newEvent();
-    	  l1_SerializedEvent temp_serialized_event = serializeEvent(temp_event);
-    	  l1_shm->construct<l1_SerializedEvent>(ID)(temp_serialized_event);
-      }
+    	event_id_to_process %= 10 + 1;
 
-      //Enqueue Data
-      //=============
-      while( !toCheckQ->try_send(ev, sizeof(EventID), priority) ){
-    	  //usleep(10);
-      }
-      //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
-
-      event_id_to_process++;
-      event_id_to_process %= L1_MEM_SIZE + 1;
-
-
-      //usleep(1000000);
+    	usleep(1000000);
     }
 
-
-  } catch(interprocess_exception& e) {
-    LOG_ERROR(e.what());
-  }
-
-
-
-  /*
-   * Join other threads
-   */
-  //AExecutable::JoinAll();
-
-  return 0;
+	/*
+	 * Join other threads
+	 */
+	//AExecutable::JoinAll();
+	return 0;
 }

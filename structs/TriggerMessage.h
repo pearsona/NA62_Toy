@@ -5,14 +5,14 @@
  *      Author: Adam Pearson
  */
 
-#ifndef EVENTID_H_
-#define EVENTID_H_
+#ifndef TRIGGER_MESSAGE_H_
+#define TRIGGER_MESSAGE_H_
 
 //#include <stdint.h>
 
-struct EventID {
+struct TriggerMessage {
 	uint id;
-        uint level;
+	uint level;
 };
 
 #endif /* EVENTID_H_ */

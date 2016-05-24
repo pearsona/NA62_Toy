@@ -32,198 +32,99 @@ boost::interprocess::message_queue * SharedMemoryManager::trigger_response_queue
 
 void SharedMemoryManager::initialize(){
 
-	l1_mem_size_ = 10;
+	l1_mem_size_ = 10000000;
 	l2_mem_size_ = 10;
 	to_q_size_ = 2;
 	from_q_size_ = 2;
+	LOG_INFO("Size of serilized event:" << sizeof(l1_SerializedEvent));
+	uint value = 1;
+
+	//Pick the nearest multiple page size in byte per excess
+	uint page_multiple_in_bytes = (l1_mem_size_ * sizeof(l1_SerializedEvent) /512 + 1 ) * 512;
 
 	try {
-		l1_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only, "l1_shm", l1_mem_size_*32*sizeof(l1_SerializedEvent));
+		//in bytes
+		l1_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only, "l1_shm", page_multiple_in_bytes);
 	} catch(boost::interprocess::interprocess_exception& e) {
-		LOG_ERROR(e.what());
+		LOG_INFO(e.what());
+		l1_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::open_or_create, "l1_shm", page_multiple_in_bytes);
 	}
 
 	try {
-		l2_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only, "l2_shm", l2_mem_size_*32*sizeof(l2_SerializedEvent));
+		l2_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only, "l2_shm", page_multiple_in_bytes);
 	} catch(boost::interprocess::interprocess_exception& e) {
-		LOG_ERROR(e.what());
+		LOG_INFO(e.what());
+		l2_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::open_or_create, "l2_shm", page_multiple_in_bytes);
 	}
 
 	try {
-		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_queue", to_q_size_, sizeof(EventID));
+		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_queue", to_q_size_, sizeof(TriggerMessage));
 	} catch(boost::interprocess::interprocess_exception& e) {
-		LOG_ERROR(e.what());
+		LOG_INFO(e.what());
+		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "trigger_queue", to_q_size_, sizeof(TriggerMessage));
 	}
 
 	try {
-		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_response_queue", from_q_size_, sizeof(EventID));
+		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_response_queue", from_q_size_, sizeof(TriggerMessage));
 	} catch(boost::interprocess::interprocess_exception& e) {
-		LOG_ERROR(e.what());
+		LOG_INFO(e.what());
+		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "trigger_response_queue", from_q_size_, sizeof(TriggerMessage));
 	}
 }
-
 
 bool SharedMemoryManager::storeL1Event(uint event_id, l1_Event l1_event){
 	std::pair<l1_SerializedEvent*, std::size_t> l1_d;
     l1_d = l1_shm_->find<l1_SerializedEvent>(label(event_id));
 
     if( !l1_d.first ){
-    	EventID trigger_message;
+
+    	TriggerMessage trigger_message;
     	trigger_message.id = event_id;
     	trigger_message.level = 1;
 
-    	uint message_priority_ = 0;
+    	uint message_priority = 0;
 
 		l1_SerializedEvent temp_serialized_event = serializeEvent(l1_event);
-		l1_shm_->construct<l1_SerializedEvent>(ID)(temp_serialized_event);
+		l1_shm_->construct<l1_SerializedEvent>(label(event_id))(temp_serialized_event);
 
   	   //Enqueue Data
   	   //=============
-  	    while( !trigger_queue_->try_send(trigger_message, sizeof(EventID), priority) ){
+  	    while( !trigger_queue_->try_send(&trigger_message, sizeof(TriggerMessage), message_priority) ){
   	  	  //TODO sleep for a while
   	    }
   	    //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
+
   	    return true;
     } else {
     	LOG_WARNING("Event: "<< event_id << "already in the memory!");
     	return false;
     }
-
 }
 
+bool SharedMemoryManager::popTriggerQueue(TriggerMessage &trigger_message, uint &priority) {
+	std::size_t struct_size = sizeof(TriggerMessage);
+	std::size_t recvd_size;
+
+	if (trigger_queue_->try_receive((void *) &trigger_message, struct_size, recvd_size, priority)) {
+		//Check than is the expected type
+		if( recvd_size == struct_size ) {
+			return true;
+		}
+		LOG_ERROR("Unexpected queue message received recvd side: "<<recvd_size<<" Instead of: "<<struct_size);
+	}
+	return false;
+}
 
 //Producing Labels for l1_Events
 //============================
-static char* label(uint n){
+char* SharedMemoryManager::label(uint n){
+	const char* std_ID = "event_1024";
+	const char* std_ID_format = "event_%04d";
+
 	//TODO possible not use a new
 	char* ID = new char[sizeof(std_ID)];
 	std::sprintf(ID, std_ID_format, n);
 	return ID;
 }
 
-//bool SharedMemoryManager::existL1SharedMemory() {
-//	try {
-//		l1_shm_ = new boost::interprocess::managed_shared_memory(boost::interprocess::create_only, "l1_shm", l1_mem_size_*32*sizeof(l1_SerializedEvent));
-//		return true;
-//	} catch(boost::interprocess::interprocess_exception& e) {
-//		LOG_ERROR(e.what());
-//		return false
-//	}
-//}
-
-
-
-
-
-
-
-
-
-/*
-// Type Definitions and Constants
-//================================
-
-typedef boost::container::string string;
-
-typedef uint32_t l1_Event;
-typedef uint32_t l1_SerializedEvent;
-typedef uint64_t l2_Event;
-typedef uint64_t l2_SerializedEvent;
-
-static const char* std_ID = "event_1024";
-static const char* std_ID_format = "event_%04d";
-
-static std::pair<l1_SerializedEvent*, std::size_t> l1_d;
-static std::pair<l2_SerializedEvent*, std::size_t> l2_d;
-
-
-static std::size_t recvd_size;
-static uint priority = 0;
-
-
-static uint L1_MEM_SIZE = 10;
-static uint L2_MEM_SIZE = 10;
-static uint TO_Q_SIZE = 2;
-static uint FROM_Q_SIZE = 2;
-
-
-
-
-
-// Functions
-//==========
-
-
-//Producing Labels for l1_Events
-//============================
-static char* label(uint n){
-  char* ID = new char[sizeof(std_ID)];
-  std::sprintf(ID, std_ID_format, n);  
-  return ID;
-}
-
-static char* label(char *s){
-  return label(atoi(s));
-}
-
-/*
-//Produce a New l1_Event
-//====================
-static l1_Event newEvent(){
-  //Generate an event with random content
-  //Generating Randon content number between 1 and 1000
-  return (rand() % 1000) + 1;
-}
-
-
-//Serialization and Unserialization
-//==================================
-static l1_SerializedEvent serializeEvent(l1_Event event) {
-  //Just do noting here now, will be implement the logic for serialize a farm event
-  return (l1_SerializedEvent) event;
-}
-
-static l1_SerializedEvent serializeEvent(l2_Event event) {
-
-  return (l2_SerializedEvent) event;
-}
-
-static l1_Event unserializeEvent(l1_SerializedEvent serialized_event) {
-   //Just do noting here now, will be implement the logic for unserialize a farm event
-   return (l1_Event) serialized_event;
-}
-
-static l2_Event unserializeEvent(l2_SerializedEvent serialized_event) {
-  return (l2_Event) serialized_event;
-}
-
-
-//L1 to L2 Conversion
-//====================
-static l2_Event l1tol2(l1_Event event){
-  return (l2_Event) event;
-}
-*/
-
-
-/*
- * L1 trigger function
- */
-/*static bool computeL1Trigger(l1_Event event) {
-   if (event % 2 == 0) {
-       return 1; //even
-   }
-   return 0; //odd
-}*/
-
-
-/*
- * L2 trigger function
- */
-/*static bool computeL2Trigger(l2_Event event) {
-  if( event % 3 == 0 ) {
-    return 1; //divisible by 3
-  }
-  return 0; //divisible by 3
-}*/
 }

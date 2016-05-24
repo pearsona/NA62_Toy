@@ -9,25 +9,16 @@ int main(int argc, char *argv[]){
   //=======================
   uint l1_num = 0, l2_num = 0;
 
-
-  try{
-    
-    //Initialize Links to Shared Memory and Queues
-    //=============================================
-
-    managed_shared_memory *l1_shm = new managed_shared_memory(open_or_create, "l1_shm", L1_MEM_SIZE*32*sizeof(l1_SerializedEvent));
-    managed_shared_memory *l2_shm = new managed_shared_memory(open_or_create, "l2_shm", L2_MEM_SIZE*32*sizeof(l2_SerializedEvent));
-    
-    message_queue *toCheckQ = new message_queue(open_or_create, "toCheck", TO_Q_SIZE, sizeof(EventID));
-    message_queue *fromCheckQ = new message_queue(open_or_create, "fromCheck", FROM_Q_SIZE, sizeof(TriggerResponse));
-
-	
-
     //Dequeue data, decide whether to L1/L2 trigger on it, and enqueue result
     //========================================================================
 
-    EventID *ev = new EventID;
+    TriggerMessage =  EventID;
     TriggerResponse response;
+
+    std::size_t recvd_size;
+
+
+
     l1_Event l1_temp_event;
     l2_Event l2_temp_event;
     bool result;
@@ -36,12 +27,16 @@ int main(int argc, char *argv[]){
 
       //Dequeing Data
       //==============
-      while( !toCheckQ->try_receive((void *)ev, sizeof(EventID), recvd_size, priority) ){
-	//usleep(10);
-      }
+    	TriggerMessage temp_trigger_message;
+    	uint temp_priority;
+    	if(SharedMemoryManager::popTriggerQueue(temp_trigger_message, priority)) {
 
-      if( recvd_size != sizeof(EventID) ) continue;
-		
+
+    	} else {
+    		//maybe sllep for a while
+    		continue;
+    	}
+  /*
       char* ID = label(ev->id);
 
 
@@ -103,11 +98,9 @@ int main(int argc, char *argv[]){
 
       if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
       if( l2_num % 10 == 0 ) LOG_INFO(getpid()<<" / l2 / "<<l2_num);
-
+*/
     }
-  } catch(interprocess_exception e){
-    LOG_ERROR(e.what());
-  }
+
 
 
 

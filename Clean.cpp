@@ -1,22 +1,6 @@
-#include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/interprocess/ipc/message_queue.hpp>
-#include <iostream>
+#include "SharedMemoryManager.h"
 
 int main(int argc, char *argv[]){
-
-  using namespace boost::interprocess;
-
-  try{
-    shared_memory_object::remove("l1_shm");
-    shared_memory_object::remove("l2_shm");
-    
-    //message_queue::remove("data");
-    message_queue::remove("toCheck");
-    message_queue::remove("fromCheck");
-
-  } catch(interprocess_exception& e){
-    std::cout<<e.what()<<std::endl;
-  }
-
+  na62::SharedMemoryManager::eraseAll();
   return 1;
 }
