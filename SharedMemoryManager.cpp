@@ -32,12 +32,11 @@ boost::interprocess::message_queue * SharedMemoryManager::trigger_response_queue
 
 void SharedMemoryManager::initialize(){
 
-	l1_mem_size_ = 10000000;
+	l1_mem_size_ = 2;
 	l2_mem_size_ = 10;
-	to_q_size_ = 2;
-	from_q_size_ = 2;
-	LOG_INFO("Size of serilized event:" << sizeof(l1_SerializedEvent));
-	uint value = 1;
+	to_q_size_ = 10;
+	from_q_size_ = 10;
+
 
 	//Pick the nearest multiple page size in byte per excess
 	uint page_multiple_in_bytes = (l1_mem_size_ * sizeof(l1_SerializedEvent) /512 + 1 ) * 512;
@@ -58,38 +57,38 @@ void SharedMemoryManager::initialize(){
 	}
 
 	try {
-		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_queue", to_q_size_, sizeof(TriggerMessage));
+		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_queue", to_q_size_, sizeof(TriggerMessager));
 	} catch(boost::interprocess::interprocess_exception& e) {
 		LOG_INFO(e.what());
-		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "trigger_queue", to_q_size_, sizeof(TriggerMessage));
+		trigger_queue_ = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "trigger_queue", to_q_size_, sizeof(TriggerMessager));
 	}
 
 	try {
-		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_response_queue", from_q_size_, sizeof(TriggerMessage));
+		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::create_only, "trigger_response_queue", from_q_size_, sizeof(TriggerMessager));
 	} catch(boost::interprocess::interprocess_exception& e) {
 		LOG_INFO(e.what());
-		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "trigger_response_queue", from_q_size_, sizeof(TriggerMessage));
+		trigger_response_queue_ = new boost::interprocess::message_queue(boost::interprocess::open_or_create, "trigger_response_queue", from_q_size_, sizeof(TriggerMessager));
 	}
 }
 
-bool SharedMemoryManager::storeL1Event(uint event_id, l1_Event l1_event){
+bool SharedMemoryManager::storeL1Event(uint event_id, Event event){
 	std::pair<l1_SerializedEvent*, std::size_t> l1_d;
     l1_d = l1_shm_->find<l1_SerializedEvent>(label(event_id));
 
     if( !l1_d.first ){
 
-    	TriggerMessage trigger_message;
+    	TriggerMessager trigger_message;
     	trigger_message.id = event_id;
     	trigger_message.level = 1;
 
     	uint message_priority = 0;
 
-		l1_SerializedEvent temp_serialized_event = serializeEvent(l1_event);
+		l1_SerializedEvent temp_serialized_event = serializeL1Event(event);
 		l1_shm_->construct<l1_SerializedEvent>(label(event_id))(temp_serialized_event);
 
   	   //Enqueue Data
   	   //=============
-  	    while( !trigger_queue_->try_send(&trigger_message, sizeof(TriggerMessage), message_priority) ){
+  	    while( !trigger_queue_->try_send(&trigger_message, sizeof(TriggerMessager), message_priority) ){
   	  	  //TODO sleep for a while
   	    }
   	    //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
@@ -101,11 +100,28 @@ bool SharedMemoryManager::storeL1Event(uint event_id, l1_Event l1_event){
     }
 }
 
-bool SharedMemoryManager::popTriggerQueue(TriggerMessage &trigger_message, uint &priority) {
-	std::size_t struct_size = sizeof(TriggerMessage);
-	std::size_t recvd_size;
 
-	if (trigger_queue_->try_receive((void *) &trigger_message, struct_size, recvd_size, priority)) {
+
+bool SharedMemoryManager::removeL1Event(uint event_id){
+	//Delete Event from Memory
+	//=========================
+	return l1_shm_->destroy<l1_SerializedEvent>(label(event_id));
+}
+
+
+
+
+bool SharedMemoryManager::popQueue(bool is_trigger_message_queue, TriggerMessager &trigger_message, uint &priority) {
+	std::size_t struct_size = sizeof(TriggerMessager);
+	std::size_t recvd_size;
+	boost::interprocess::message_queue * queue;
+
+	if (is_trigger_message_queue) {
+		queue = trigger_queue_;
+	} else {
+		queue = trigger_response_queue_;
+	}
+	if (queue->try_receive((void *) &trigger_message, struct_size, recvd_size, priority)) {
 		//Check than is the expected type
 		if( recvd_size == struct_size ) {
 			return true;
@@ -114,6 +130,60 @@ bool SharedMemoryManager::popTriggerQueue(TriggerMessage &trigger_message, uint 
 	}
 	return false;
 }
+
+bool SharedMemoryManager::popTriggerQueue(TriggerMessager &trigger_message, uint &priority) {
+	return popQueue(1, trigger_message, priority);
+}
+
+bool SharedMemoryManager::popTriggerResponseQueue(TriggerMessager &trigger_message, uint &priority) {
+	return popQueue(0, trigger_message, priority);
+}
+
+
+
+
+bool SharedMemoryManager::pushTriggerResponseQueue(TriggerMessager trigger_message) {
+	uint priority = 0;
+	while( !trigger_response_queue_->try_send(&trigger_message, sizeof(TriggerMessager), priority) ){
+			//usleep(10);
+	}
+	return true;
+}
+
+
+bool SharedMemoryManager::getNextEvent(Event &event, TriggerMessager & trigger_message) {
+	//TriggerMessage temp_trigger_message;
+	uint temp_priority;
+
+	if (popTriggerQueue(trigger_message, temp_priority)) {
+		if( trigger_message.level == 1 ){
+			std::pair<l1_SerializedEvent*, std::size_t> l1_d;
+
+			l1_d = l1_shm_->find<l1_SerializedEvent>(label(trigger_message.id));
+			if ( l1_d.first != 0 ) {
+				event = unserializeEvent(*l1_d.first);
+                return true;
+			}
+			LOG_ERROR("Error couldn't find this piece of data in l1...");
+			return false;
+
+		}else if( trigger_message.level == 2 ){
+			std::pair<l2_SerializedEvent*, std::size_t> l2_d;
+
+			l2_d = l2_shm_->find<l2_SerializedEvent>(label(trigger_message.id));
+			if ( l2_d.first != 0 ) {
+				event = unserializeEvent(*l2_d.first);
+				return true;
+			}
+			LOG_ERROR("Error couldn't find this piece of data in l2...");
+			return false;
+		}
+		LOG_ERROR("No idea of which level you want to process..");
+		return false;
+	}
+	return false;
+}
+
 
 //Producing Labels for l1_Events
 //============================

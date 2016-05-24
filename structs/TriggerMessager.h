@@ -5,14 +5,15 @@
  *      Author: Adam Pearson
  */
 
-#ifndef TRIGGER_MESSAGE_H_
-#define TRIGGER_MESSAGE_H_
+#ifndef TRIGGER_MESSAGER_H_
+#define TRIGGER_MESSAGER_H_
 
 //#include <stdint.h>
 
-struct TriggerMessage {
+struct TriggerMessager {
 	uint id;
 	uint level;
+	bool trigger_result;
 };
 
 #endif /* EVENTID_H_ */

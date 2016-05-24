@@ -1,104 +1,79 @@
-#include "shared.hpp"
+#include <time.h>
+#include <cstdlib>
+
+#include "SharedMemoryManager.h"
+
+#include "structs/TriggerMessager.h"
+
+/*
+ * L1 trigger function
+ */
+static bool computeL1Trigger(Event event) {
+   if (event % 2 == 0) {
+       return 1; //even
+   }
+   return 0; //odd
+}
+
+/*
+ * L2 trigger function
+ */
+static bool computeL2Trigger(Event event) {
+  if( event % 3 == 0 ) {
+    return 1; //divisible by 3
+  }
+  return 0; //divisible by 3
+}
 
 //Main
 int main(int argc, char *argv[]){
 
   srand(time(NULL));
+  na62::SharedMemoryManager::initialize();
 
   //Benchmarking Variables
   //=======================
-  uint l1_num = 0, l2_num = 0;
+	uint l1_num = 0, l2_num = 0;
 
     //Dequeue data, decide whether to L1/L2 trigger on it, and enqueue result
     //========================================================================
+	TriggerMessager trigger_message;
 
-    TriggerMessage =  EventID;
-    TriggerResponse response;
-
-    std::size_t recvd_size;
-
-
-
-    l1_Event l1_temp_event;
-    l2_Event l2_temp_event;
-    bool result;
+    Event fetched_event;
 
     while (1) {
 
-      //Dequeing Data
-      //==============
-    	TriggerMessage temp_trigger_message;
-    	uint temp_priority;
-    	if(SharedMemoryManager::popTriggerQueue(temp_trigger_message, priority)) {
+    	if (na62::SharedMemoryManager::getNextEvent(fetched_event, trigger_message)) {
+			if(trigger_message.level == 1) {
+				trigger_message.trigger_result  = computeL1Trigger(fetched_event);
+
+				//LOG_INFO("Received event: " << trigger_message.id <<" Value: "<< l1_temp_event<<" L"<< ev->level<<" processing algorithm result: "<< result);
+				LOG_INFO("Received event: " << trigger_message.id);
+				l1_num++;
+
+			}
+
+			if(trigger_message.level == 2) {
+				trigger_message.trigger_result = computeL2Trigger(fetched_event);
+
+				l2_num++;
+			}
+			na62::SharedMemoryManager::pushTriggerResponseQueue(trigger_message);
+
+			//Slowdown the code just for understand what happen
+			//usleep(1000000);
+
+
+			if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
+			if( l2_num % 10 == 0 ) LOG_INFO(getpid()<<" / l2 / "<<l2_num);
 
 
     	} else {
-    		//maybe sllep for a while
+    		//maybe sleep for a while
+    		usleep(1000000);
     		continue;
     	}
-  /*
-      char* ID = label(ev->id);
 
-
-      //L1 Triggering Decision
-      //=======================
-      if( ev->level == 1 ){
-	l1_d = l1_shm->find<l1_SerializedEvent>(ID);
-	if ( l1_d.first != 0 ) {
-	  l1_temp_event = unserializeEvent(*l1_d.first);
-	  result = computeL1Trigger(l1_temp_event);
-	
-	  response.level = 1;
-
-	  //LOG_INFO("Received event: " << ev->id <<" Value: "<< l1_temp_event<<" L"<< ev->level<<" processing algorithm result: "<< result);
-
-	  l1_num++;
-			
-	} else {
-	  //LOG_INFO("Error couldn't find this piece of data in l1...");
-	  continue;
-	}
-      }
-      //L2 Triggering Decision
-      //=======================
-      else if( ev->level == 2 ){
-	l2_d = l2_shm->find<l2_SerializedEvent>(ID);
-	if ( l2_d.first != 0 ) {
-	  l2_temp_event = unserializeEvent(*l2_d.first);
-	  result = computeL2Trigger(l2_temp_event);
-
-	  response.level = 2;
-
-	  //LOG_INFO("Received event: " << ev->id <<" Value: "<< l2_temp_event<<" L"<< ev->level<<" processing algorithm result: "<< result);
-	  
-	  l2_num++;
-
-	} else {
-	  //LOG_INFO("Error couldn't find this piece of data in l2...");
-	  continue;
-		
-	}
-
-      }
-
-		
-      //Building and Enqueing Response
-      //===============================
-      response.event_id = ev->id;
-      response.result = result;
-
-      while( !fromCheckQ->try_send(&response, sizeof(TriggerResponse), priority) ){
-	//usleep(10);
-      }
-
-
-      //Slowdown the code just for understand what happen
-      //usleep(1000000);
-
-
-      if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
-      if( l2_num % 10 == 0 ) LOG_INFO(getpid()<<" / l2 / "<<l2_num);
-*/
     }
 
 

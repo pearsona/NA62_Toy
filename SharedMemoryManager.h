@@ -21,13 +21,12 @@
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/ipc/message_queue.hpp>
 
-#include "structs/TriggerMessage.h"
+#include "structs/TriggerMessager.h"
 #include "options/Logging.h"
 
 //TODO move somewhere not here
-typedef uint32_t l1_Event;
+typedef uint32_t Event;
 typedef uint32_t l1_SerializedEvent;
-typedef uint64_t l2_Event;
 typedef uint64_t l2_SerializedEvent;
 
 
@@ -116,29 +115,38 @@ public:
 		eraseTriggerResponseQueue();
 	}
 
-	static bool storeL1Event(uint event_id_to_process, l1_Event temp_event);
-	static bool popTriggerQueue(TriggerMessage &trigger_message, uint &priority);
+	static bool storeL1Event(uint event_id_to_process, Event temp_event);
+	static bool removeL1Event(uint event_id);
+
+	static bool popQueue(bool is_trigger_message_queue, TriggerMessager &trigger_message, uint &priority);
+	static bool popTriggerQueue(TriggerMessager &trigger_message, uint &priority);
+	static bool popTriggerResponseQueue(TriggerMessager &trigger_message, uint &priority);
+
+	static bool pushTriggerResponseQueue(TriggerMessager trigger_message);
+
+
+	static bool getNextEvent(Event &event, TriggerMessager &trigger_message);
 
 	//Serialization and Unserialization
 	//==================================
 	//Will be moved
-	static inline l1_SerializedEvent serializeEvent(l1_Event event) {
+	static inline l1_SerializedEvent serializeL1Event(Event event) {
 	  //Just do noting here now, will be implement the logic for serialize a farm event
 	  return (l1_SerializedEvent) event;
 	}
 
-	static inline l2_SerializedEvent serializeEvent(l2_Event event) {
+	static inline l2_SerializedEvent serializeL2Event(Event event) {
 
 	  return (l2_SerializedEvent) event;
 	}
 
-	static inline l1_Event unserializeEvent(l1_SerializedEvent serialized_event) {
+	static inline Event unserializeEvent(l1_SerializedEvent serialized_event) {
 	   //Just do noting here now, will be implement the logic for unserialize a farm event
-	   return (l1_Event) serialized_event;
+	   return (Event) serialized_event;
 	}
 
-	static inline l2_Event unserializeEvent(l2_SerializedEvent serialized_event) {
-	  return (l2_Event) serialized_event;
+	static inline Event unserializeEvent(l2_SerializedEvent serialized_event) {
+	  return (Event) serialized_event;
 	}
 
 

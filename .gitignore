@@ -3,4 +3,5 @@ B
 Clean
 viewData
 *.o
+.project
 
