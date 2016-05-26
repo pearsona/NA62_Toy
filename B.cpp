@@ -1,7 +1,7 @@
 #include <time.h>
 #include <cstdlib>
 
-#include "SharedMemoryManager.h"
+#include "sharedMemory/SharedMemoryManager.h"
 
 #include "structs/TriggerMessager.h"
 
@@ -29,8 +29,9 @@ static bool computeL2Trigger(Event event) {
 int main(int argc, char *argv[]){
 
   srand(time(NULL));
+  LOG_INFO("Initializing ");
   na62::SharedMemoryManager::initialize();
-
+  LOG_INFO("Initializing done!");
   //Benchmarking Variables
   //=======================
 	uint l1_num = 0, l2_num = 0;
@@ -63,14 +64,15 @@ int main(int argc, char *argv[]){
 			//Slowdown the code just for understand what happen
 			//usleep(1000000);
 
-
-			if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
-			if( l2_num % 10 == 0 ) LOG_INFO(getpid()<<" / l2 / "<<l2_num);
+			LOG_INFO(getpid()<<" / l1 / "<<l1_num);
+			//if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
+			//if( l2_num % 10 == 0 ) LOG_INFO(getpid()<<" / l2 / "<<l2_num);
 
 
     	} else {
     		//maybe sleep for a while
-    		usleep(1000000);
+    		//LOG_INFO("Nothing fetched trigger queue sleep for a while");
+    		usleep(1);
     		continue;
     	}
 
