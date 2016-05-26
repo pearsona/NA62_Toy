@@ -88,12 +88,15 @@ bool SharedMemoryManager::storeL1Event(uint event_id, Event event){
 
   	   //Enqueue Data
   	   //=============
-  	    while( !trigger_queue_->try_send(&trigger_message, sizeof(TriggerMessager), message_priority) ){
-  	  	  //TODO sleep for a while
-  	    }
+	   while( 1 ){ 
+	     for( int i = 0; i < 100; i++)
+	       if( trigger_queue_->try_send(&trigger_message, sizeof(TriggerMessager), message_priority) ) return true;
+	       usleep(1000);
+	     //TODO sleep for a while
+	   }
   	    //LOG_INFO("Sended event id: "<<ev->id<<" for l"<<ev->level<<" processing");
 
-  	    return true;
+  	    return false;
     } else {
     	LOG_WARNING("Event: "<< event_id << "already in the memory!");
     	return false;
@@ -144,10 +147,13 @@ bool SharedMemoryManager::popTriggerResponseQueue(TriggerMessager &trigger_messa
 
 bool SharedMemoryManager::pushTriggerResponseQueue(TriggerMessager trigger_message) {
 	uint priority = 0;
-	while( !trigger_response_queue_->try_send(&trigger_message, sizeof(TriggerMessager), priority) ){
-			//usleep(10);
+	while( 1 ){
+	  for( int i = 0; i < 100; i++)
+	    if( trigger_response_queue_->try_send(&trigger_message, sizeof(TriggerMessager), priority) ) return true;
+	  usleep(1000);
 	}
-	return true;
+
+	return false;
 }
 
 
