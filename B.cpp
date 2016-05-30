@@ -78,10 +78,10 @@ int main(int argc, char *argv[]){
 			//	trigger_message.trigger_result = computeL2Trigger(fetched_event);
 			//	l2_num++;
 			//}
-			//na62::SharedMemoryManager::pushTriggerResponseQueue(trigger_message);
+			na62::SharedMemoryManager::pushTriggerResponseQueue(trigger_message);
 
 			//Slowdown the code just for understand what happen
-			//usleep(1000000);
+			usleep(1000000);
 
 			//LOG_INFO(getpid()<<" / l1 / "<<l1_num);
 			//if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
@@ -94,7 +94,6 @@ int main(int argc, char *argv[]){
     		usleep(1);
     		continue;
     	}
-
     }
 
 

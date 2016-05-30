@@ -1,8 +1,9 @@
-#include "utils/AExecutable.h"
-#include "sharedMemory/SharedMemoryManager.h"
-
-#include "sharedMemory/QueueReceiver.h"
 #include <boost/timer/timer.hpp>
+#include "utils/AExecutable.h"
+
+#include "sharedMemory/SharedMemoryManager.h"
+#include "sharedMemory/QueueReceiver.h"
+#include "structs/SerialEvent.h"
 
 using namespace na62;
 
@@ -18,19 +19,24 @@ using namespace na62;
 
 
 
-/*Event newEvent(uint size){
-	//Generate an event with random content
-	//Generating Randon content number between 1 and 1000
-	char * temp = new char[size];
-	temp[0] = 'a';
-	temp[1] = 'b';
-	temp[2] = 'c';
-	return temp;
-}*/
+Event newEvent(uint event_id){
+	Event event;
+	event.event_id = event_id;
+	event.length = rand()%20 + 10;
+	event.data = new char[event.length];
+	for (uint i = 0; i < event.length; i++){
+		event.data[i] = i;
+		//std::cout << i << " " << random_event[i] << std::endl;
+	}
+
+	return event;
+}
+
+
 
 
 int main(int argc, char* argv[]){
-
+	srand(time(0));
 	//srand(time(NULL));
 	SharedMemoryManager::initialize();
 
@@ -51,18 +57,30 @@ int main(int argc, char* argv[]){
     	event.event_id = event_id_to_process;
 
 
+
+		uint random_event_size = rand()%20 + 10;
+		char * random_event = new char[random_event_size];
+		for (uint i = 0; i < random_event_size; i++){
+			  random_event[i] = i;
+			  //std::cout << i << " " << random_event[i] << std::endl;
+		}
+
+
     	LOG_INFO("Cretaed event id: "<<event_id_to_process<<" for l1 processing. Size: "<<size);
-    	while (! SharedMemoryManager::storeL1Event(event_id_to_process, event)) {
+    	Event new_event = newEvent(event_id_to_process);
+    	while (! SharedMemoryManager::storeL1Event(new_event)) {
     		LOG_INFO("No memory left impossible insert the fragment, sleeping for a second");
     		usleep(1000000);
     	}
+    	delete[] new_event.data;
+
 
     	//event_id_to_process %= 10 + 1;
 
     	LOG_INFO("Total Processed: "<<total_processed);
 
 
-    	//usleep(1000000);
+    	usleep(1000000);
     }
 
 	/*
