@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
 			delete[] fetched_event.data;
 
 			//Slowdown the code just for understand what happen
-			//usleep(1000000);
+			usleep(1000000);
 
 			//LOG_INFO(getpid()<<" / l1 / "<<l1_num);
 			//if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
@@ -88,10 +88,5 @@ int main(int argc, char *argv[]){
     		continue;
     	}
     }
-
-
-
-
-
   return 0;
 }

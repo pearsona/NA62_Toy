@@ -60,6 +60,7 @@ int main(int argc, char* argv[]){
     	}
     	delete[] new_event.data;
 
+
     	LOG_INFO("Total Processed: "<<++total_processed);
 
 
