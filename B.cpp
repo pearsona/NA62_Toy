@@ -12,24 +12,14 @@ static bool computeL1Trigger(Event event) {
 
 	LOG_INFO("computing trigger");
 
-/*	try{
-
-		if (event[0] != 'a' || event[1] != 'b' || event[2] != 'c') {
-			LOG_WARNING("Event Corrupted!");
+	for (int i = 0; i < event.length; i++) {
+		if(event.data[i] != i) {
 			return false;
 		}
 	}
-	catch(std::exception e){
-		LOG_ERROR(e.what());
-	}*/
+	LOG_INFO("Event Number: " <<event.event_id );
 
-
-   /*if (event % 2 == 0) {
-       return 1; //even
-   }*/
-   LOG_INFO("Event Number: " <<event.event_id );
-
-   return true; //odd
+   return true;
 }
 
 /*
@@ -69,7 +59,7 @@ int main(int argc, char *argv[]){
 				trigger_message.trigger_result  = computeL1Trigger(fetched_event);
 
 				//LOG_INFO("Received event: " << trigger_message.id <<" Value: "<< l1_temp_event<<" L"<< ev->level<<" processing algorithm result: "<< result);
-				LOG_INFO("Received event: " << trigger_message.id);
+				LOG_INFO("Received event: " << trigger_message.event_id);
 				l1_num++;
 
 			}
@@ -78,7 +68,10 @@ int main(int argc, char *argv[]){
 			//	trigger_message.trigger_result = computeL2Trigger(fetched_event);
 			//	l2_num++;
 			//}
-			//na62::SharedMemoryManager::pushTriggerResponseQueue(trigger_message);
+			na62::SharedMemoryManager::pushTriggerResponseQueue(trigger_message);
+
+			//Destroing the local copy of the object
+			delete[] fetched_event.data;
 
 			//Slowdown the code just for understand what happen
 			//usleep(1000000);
@@ -94,7 +87,6 @@ int main(int argc, char *argv[]){
     		usleep(1);
     		continue;
     	}
-
     }
 
 
