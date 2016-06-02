@@ -13,13 +13,13 @@ static bool computeL1Trigger(Event event) {
 	LOG_INFO("computing trigger");
 
 	for (int i = 0; i < event.length; i++) {
-		if(event.data[i] != i) {
+		if(event.data[i] != i % 256) {
 			return false;
 		}
 	}
 	LOG_INFO("Event Number: " <<event.event_id );
 
-   return true;
+	return true;
 }
 
 /*
@@ -35,25 +35,24 @@ static bool computeL1Trigger(Event event) {
 //Main
 int main(int argc, char *argv[]){
 
-  srand(time(NULL));
-  LOG_INFO("Initializing ");
-  na62::SharedMemoryManager::initialize();
-  LOG_INFO("Initializing done!");
-  //Benchmarking Variables
-  //=======================
+	srand(time(NULL));
+	LOG_INFO("Initializing ");
+	na62::SharedMemoryManager::initialize();
+	LOG_INFO("Initializing done!");
+	//Benchmarking Variables
+	//=======================
 	uint l1_num = 0, l2_num = 0;
 
-    //Dequeue data, decide whether to L1/L2 trigger on it, and enqueue result
-    //========================================================================
+	//Dequeue data, decide whether to L1/L2 trigger on it, and enqueue result
+	//========================================================================
+
+
+	Event fetched_event;
 	TriggerMessager trigger_message;
 
-    Event fetched_event;
+	while (1) {
 
-    while (1) {
-
-    	if (na62::SharedMemoryManager::getNextEvent(fetched_event, trigger_message)) {
-
-    		//LOG_INFO(fetched_event);
+		if (na62::SharedMemoryManager::getNextEvent(fetched_event, trigger_message)) {
 
 			if(trigger_message.level == 1) {
 				trigger_message.trigger_result  = computeL1Trigger(fetched_event);
@@ -81,12 +80,12 @@ int main(int argc, char *argv[]){
 			//if( l2_num % 10 == 0 ) LOG_INFO(getpid()<<" / l2 / "<<l2_num);
 
 
-    	} else {
-    		//maybe sleep for a while
-    		//LOG_INFO("Nothing fetched trigger queue sleep for a while");
-    		usleep(1);
-    		continue;
-    	}
-    }
-  return 0;
+		} else {
+			//maybe sleep for a while
+			//LOG_INFO("Nothing fetched trigger queue sleep for a while");
+			usleep(1);
+			continue;
+		}
+	}
+	return 0;
 }
