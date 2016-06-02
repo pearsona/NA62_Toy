@@ -25,7 +25,8 @@ Event newEvent(uint event_id){
 	event.length = rand()%2000 + 200;
 	event.data = new char[event.length];
 	for (uint i = 0; i < event.length; i++){
-		event.data[i] = i % 256;
+		//event.data[i] = i % 255;
+		event.data[i] = 'a';
 		//std::cout << i << " " << random_event[i] << std::endl;
 	}
 
@@ -54,16 +55,20 @@ int main(int argc, char* argv[]){
 		Event new_event = newEvent(total_processed++);
 		LOG_INFO("Created event id: "<<total_processed<<" for l1 processing. Size: "<<new_event.length);
 
+		//This bock the process until is able to store the event
+		SharedMemoryManager::storeL1Event(new_event);
 
-		while (! SharedMemoryManager::storeL1Event(new_event)) {
-			LOG_INFO("No memory left impossible insert the fragment, sleeping for a second");
-			usleep(10);
-		}
 		delete[] new_event.data;
 
-		LOG_INFO("Total Processed: "<<total_processed<<"\n\n");
 
-	//	usleep(100000);
+
+
+		if (total_processed % 1 == 0) {
+			LOG_INFO("Total Processed: "<<total_processed<<"\n\n");
+			LOG_INFO("************************Fraction of evets stored " << SharedMemoryManager::getStoreRatio());
+		}
+
+		usleep(1000000);
 	}
 
 	/*

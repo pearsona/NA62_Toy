@@ -13,7 +13,8 @@ static bool computeL1Trigger(Event event) {
 	LOG_INFO("computing trigger");
 
 	for (int i = 0; i < event.length; i++) {
-		if(event.data[i] != i % 256) {
+		if(event.data[i] != 'a') {
+
 			return false;
 		}
 	}
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]){
 				trigger_message.trigger_result  = computeL1Trigger(fetched_event);
 
 				//LOG_INFO("Received event: " << trigger_message.id <<" Value: "<< l1_temp_event<<" L"<< ev->level<<" processing algorithm result: "<< result);
-				LOG_INFO("Received event: " << trigger_message.event_id);
+				LOG_INFO("Received event: " << trigger_message.event_id << "Trigger Result:  " << trigger_message.trigger_result);
 				l1_num++;
 
 			}
@@ -73,7 +74,7 @@ int main(int argc, char *argv[]){
 			delete[] fetched_event.data;
 
 			//Slowdown the code just for understand what happen
-			usleep(1000000);
+			usleep(10000);
 
 			//LOG_INFO(getpid()<<" / l1 / "<<l1_num);
 			//if( l1_num % 10 == 0 ) LOG_INFO(getpid()<<" / l1 / "<<l1_num);
