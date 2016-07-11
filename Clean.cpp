@@ -1,4 +1,4 @@
-#include "sharedMemory/SharedMemoryManager.h"
+#include "SharedMemory/SharedMemoryManager.h"
 
 int main(int argc, char *argv[]){
   na62::SharedMemoryManager::eraseAll();
