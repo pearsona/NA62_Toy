@@ -1,8 +1,8 @@
 #include <boost/timer/timer.hpp>
 #include "utils/AExecutable.h"
 
-#include "sharedMemory/SharedMemoryManager.h"
-#include "sharedMemory/QueueReceiver.h"
+#include "SharedMemory/SharedMemoryManager.h"
+#include "SharedMemory/QueueReceiver.h"
 #include "structs/SerialEvent.h"
 
 using namespace na62;
